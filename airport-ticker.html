@@ -13,45 +13,26 @@
         }
 
         :root {
-            --bg-primary: #0a0e27;
-            --bg-secondary: #1a1f3a;
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
             --accent-yellow: #ffd700;
             --accent-orange: #ff6b35;
             --text-white: #ffffff;
-            --text-muted: #8892b0;
-            --board-bg: #1c1c1c;
-            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --text-muted: #cccccc;
+            --board-bg: #0a0a0a;
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
         }
 
         body {
             font-family: 'Share Tech Mono', monospace;
-            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1628 100%);
+            background: #000000;
             min-height: 100vh;
             color: var(--text-white);
             overflow-x: hidden;
+            font-weight: bold;
         }
 
-        /* Animated background grid */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridMove 20s linear infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
+        /* Removed animated background for TV display */
 
         .container {
             position: relative;
@@ -65,6 +46,58 @@
             text-align: center;
             margin-bottom: 40px;
             padding: 30px 0;
+        }
+
+        .digital-clock {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--accent-yellow);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+        }
+
+        .timezone-info {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+
+        .location-info {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-orange);
+            margin-top: 10px;
+            font-weight: normal;
+        }
+
+        .suggested-airports {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .airport-suggestion {
+            padding: 8px 16px;
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid var(--accent-yellow);
+            border-radius: 8px;
+            color: var(--accent-yellow);
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .airport-suggestion:hover {
+            background: rgba(255, 215, 0, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
         }
 
         h1 {
@@ -82,16 +115,17 @@
         }
 
         @keyframes titleGlow {
-            0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3)); }
-            50% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.6)); }
+            0%, 100% { filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.6)); }
+            50% { filter: drop-shadow(0 0 50px rgba(255, 215, 0, 0.9)); }
         }
 
         .subtitle {
             font-family: 'Orbitron', sans-serif;
-            color: var(--text-muted);
-            font-size: 0.9rem;
+            color: var(--text-white);
+            font-size: 1.1rem;
             letter-spacing: 4px;
             text-transform: uppercase;
+            font-weight: bold;
         }
 
         .controls {
@@ -214,15 +248,15 @@
             grid-template-columns: 1.2fr 1fr 2fr 1fr 1fr 1fr 1fr;
             gap: 15px;
             padding: 15px 20px;
-            background: rgba(255, 215, 0, 0.1);
+            background: rgba(255, 215, 0, 0.15);
             border-radius: 8px 8px 0 0;
             margin-bottom: 0;
             font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            font-size: 0.85rem;
+            font-weight: 900;
+            font-size: 1rem;
             letter-spacing: 2px;
             text-transform: uppercase;
-            color: var(--accent-yellow);
+            color: var(--text-white);
             position: sticky;
             top: 0;
             z-index: 10;
@@ -295,13 +329,15 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            font-size: 1rem;
+            font-size: 1.1rem;
             letter-spacing: 1px;
+            font-weight: bold;
+            color: var(--text-white);
         }
 
         .flight-number {
             font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
+            font-weight: 900;
             color: var(--accent-yellow);
             display: flex;
             align-items: center;
@@ -319,12 +355,14 @@
 
         .airline-name {
             color: var(--text-white);
-            font-size: 0.9rem;
+            font-size: 1rem;
+            font-weight: bold;
         }
 
         .destination {
             font-weight: bold;
             color: var(--text-white);
+            font-size: 1.1rem;
         }
 
         .status {
@@ -448,8 +486,12 @@
 <body>
     <div class="container">
         <header>
+            <div class="digital-clock" id="digitalClock">00:00:00</div>
+            <div class="timezone-info" id="timezoneInfo"></div>
             <h1>Flight Board</h1>
             <div class="subtitle">Live Departure & Arrival Information</div>
+            <div class="location-info" id="locationInfo"></div>
+            <div class="suggested-airports" id="suggestedAirports"></div>
         </header>
 
         <div class="controls">
@@ -518,6 +560,107 @@
             'G4': 'Allegiant Air',
             'SY': 'Sun Country Airlines',
         };
+
+        // Major US airports with coordinates for location-based suggestions
+        const majorAirports = [
+            { code: 'ATL', name: 'Atlanta', lat: 33.6407, lon: -84.4277 },
+            { code: 'DFW', name: 'Dallas/Fort Worth', lat: 32.8998, lon: -97.0403 },
+            { code: 'DEN', name: 'Denver', lat: 39.8561, lon: -104.6737 },
+            { code: 'ORD', name: 'Chicago O\'Hare', lat: 41.9742, lon: -87.9073 },
+            { code: 'LAX', name: 'Los Angeles', lat: 33.9425, lon: -118.408 },
+            { code: 'JFK', name: 'New York JFK', lat: 40.6413, lon: -73.7781 },
+            { code: 'LGA', name: 'New York LaGuardia', lat: 40.7769, lon: -73.8740 },
+            { code: 'LAS', name: 'Las Vegas', lat: 36.0840, lon: -115.1537 },
+            { code: 'PHX', name: 'Phoenix', lat: 33.4352, lon: -112.0101 },
+            { code: 'MIA', name: 'Miami', lat: 25.7959, lon: -80.2870 },
+            { code: 'IAH', name: 'Houston', lat: 29.9902, lon: -95.3368 },
+            { code: 'SEA', name: 'Seattle', lat: 47.4502, lon: -122.3088 },
+            { code: 'SFO', name: 'San Francisco', lat: 37.6213, lon: -122.3790 },
+            { code: 'MCO', name: 'Orlando', lat: 28.4312, lon: -81.3081 },
+            { code: 'BOS', name: 'Boston', lat: 42.3656, lon: -71.0096 },
+            { code: 'MSP', name: 'Minneapolis', lat: 44.8848, lon: -93.2223 },
+            { code: 'DTW', name: 'Detroit', lat: 42.2162, lon: -83.3554 },
+            { code: 'PHL', name: 'Philadelphia', lat: 39.8729, lon: -75.2437 },
+            { code: 'CLT', name: 'Charlotte', lat: 35.2144, lon: -80.9473 },
+            { code: 'CHS', name: 'Charleston', lat: 32.8986, lon: -80.0405 },
+            { code: 'BWI', name: 'Baltimore', lat: 39.1774, lon: -76.6684 },
+            { code: 'SAN', name: 'San Diego', lat: 32.7338, lon: -117.1933 },
+            { code: 'TPA', name: 'Tampa', lat: 27.9755, lon: -82.5332 },
+            { code: 'PDX', name: 'Portland', lat: 45.5898, lon: -122.5951 },
+            { code: 'STL', name: 'St. Louis', lat: 38.7499, lon: -90.3697 }
+        ];
+
+        // Calculate distance between two coordinates (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 3959; // Earth's radius in miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Get user's location and suggest nearest airports
+        function detectLocationAndSuggestAirports() {
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLon = position.coords.longitude;
+                        
+                        // Calculate distances to all airports
+                        const airportsWithDistance = majorAirports.map(airport => ({
+                            ...airport,
+                            distance: calculateDistance(userLat, userLon, airport.lat, airport.lon)
+                        }));
+                        
+                        // Sort by distance
+                        airportsWithDistance.sort((a, b) => a.distance - b.distance);
+                        
+                        // Get nearest 3 airports
+                        const nearest = airportsWithDistance.slice(0, 3);
+                        
+                        // Display location info
+                        const locationInfo = document.getElementById('locationInfo');
+                        locationInfo.innerHTML = `📍 Detected Location: ${userLat.toFixed(2)}°, ${userLon.toFixed(2)}°`;
+                        
+                        // Display suggested airports
+                        const suggestedDiv = document.getElementById('suggestedAirports');
+                        suggestedDiv.innerHTML = nearest.map(airport => 
+                            `<div class="airport-suggestion" onclick="selectAirport('${airport.code}')">
+                                ${airport.code} - ${airport.name} (${Math.round(airport.distance)} mi)
+                            </div>`
+                        ).join('');
+                    },
+                    (error) => {
+                        console.log('Geolocation not available:', error);
+                        // Show some default suggestions
+                        const suggestedDiv = document.getElementById('suggestedAirports');
+                        suggestedDiv.innerHTML = `
+                            <div class="airport-suggestion" onclick="selectAirport('ATL')">ATL - Atlanta</div>
+                            <div class="airport-suggestion" onclick="selectAirport('LAX')">LAX - Los Angeles</div>
+                            <div class="airport-suggestion" onclick="selectAirport('ORD')">ORD - Chicago</div>
+                        `;
+                    }
+                );
+            } else {
+                // Geolocation not supported - show popular airports
+                const suggestedDiv = document.getElementById('suggestedAirports');
+                suggestedDiv.innerHTML = `
+                    <div class="airport-suggestion" onclick="selectAirport('ATL')">ATL - Atlanta</div>
+                    <div class="airport-suggestion" onclick="selectAirport('LAX')">LAX - Los Angeles</div>
+                    <div class="airport-suggestion" onclick="selectAirport('ORD')">ORD - Chicago</div>
+                `;
+            }
+        }
+
+        // Select airport from suggestion
+        function selectAirport(code) {
+            document.getElementById('airportCode').value = code;
+            loadFlights();
+        }
 
         // AviationStack API Integration
         // Sign up for FREE at: https://aviationstack.com/
@@ -849,13 +992,13 @@
             }
         }
 
-        // Auto-refresh every 60 seconds if airport code is set
+        // Auto-refresh every 2 minutes (120 seconds) if airport code is set
         setInterval(() => {
             const airportCode = document.getElementById('airportCode').value.trim();
             if (airportCode && airportCode.length >= 3 && AVIATIONSTACK_API_KEY !== 'YOUR_API_KEY_HERE') {
                 loadFlights();
             }
-        }, 60000);
+        }, 120000); // 2 minutes
 
         // Allow Enter key to load flights
         document.getElementById('airportCode').addEventListener('keypress', (e) => {
@@ -863,6 +1006,29 @@
                 loadFlights();
             }
         });
+
+        // Digital clock update
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('digitalClock').textContent = `${hours}:${minutes}:${seconds}`;
+            
+            // Update timezone info (only once)
+            if (!document.getElementById('timezoneInfo').textContent) {
+                const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const tzAbbr = now.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
+                document.getElementById('timezoneInfo').textContent = `${timezone} (${tzAbbr})`;
+            }
+        }
+
+        // Update clock immediately and then every second
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Detect location and suggest airports on page load
+        detectLocationAndSuggestAirports();
     </script>
 </body>
 </html>
