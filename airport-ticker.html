@@ -306,6 +306,16 @@
             animation: slideIn 0.5s ease-out backwards;
         }
 
+        .flight-row.active {
+            background: rgba(255, 215, 0, 0.15);
+            border-left-color: var(--accent-yellow);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .flight-row.active .flight-cell {
+            font-weight: 900;
+        }
+
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -809,6 +819,7 @@
             }
 
             const flights = [];
+            const now = new Date();
 
             data.data.forEach(flight => {
                 // Extract airline info
@@ -837,15 +848,17 @@
                 const hours = timeObj.getHours().toString().padStart(2, '0');
                 const minutes = timeObj.getMinutes().toString().padStart(2, '0');
 
-                // Determine status
+                // Determine status and if flight is active
                 let status = 'Scheduled';
                 let statusClass = 'scheduled';
+                let isActive = false;
 
                 const flightStatus = flight.flight_status?.toLowerCase();
                 
                 if (flightStatus === 'active' || flightStatus === 'en-route') {
-                    status = 'Departed';
+                    status = 'In Flight';
                     statusClass = 'departed';
+                    isActive = true; // Mark as active for highlighting
                 } else if (flightStatus === 'landed') {
                     status = 'Arrived';
                     statusClass = 'departed';
@@ -886,7 +899,9 @@
                     statusClass: statusClass,
                     aircraft: flight.aircraft?.registration || flight.aircraft?.iata || 'N/A',
                     isDeparture: isDeparture,
-                    sortTime: timeObj.getTime()
+                    sortTime: timeObj.getTime(),
+                    isActive: isActive, // Add active flag
+                    timeDiff: timeObj - now // Time difference for sorting
                 });
             });
 
@@ -904,9 +919,10 @@
             board.innerHTML = flights.map((flight, index) => {
                 const airlineName = airlineNames[flight.airline] || flight.airline;
                 const logoUrl = airlineLogos[flight.airline] || `https://images.kiwi.com/airlines/64/${flight.airline}.png`;
+                const activeClass = flight.isActive ? 'active' : '';
                 
                 return `
-                <div class="flight-row" style="animation-delay: ${index * 0.05}s">
+                <div class="flight-row ${activeClass}" style="animation-delay: ${index * 0.05}s">
                     <div class="flight-cell airline-name" data-label="Airline:">${airlineName}</div>
                     <div class="flight-cell flight-number" data-label="Flight:">
                         <img src="${logoUrl}" alt="${flight.airline}" class="airline-logo" onerror="this.style.display='none'">
@@ -967,8 +983,17 @@
             try {
                 const flights = await fetchFlightData(airportCode, flightType);
                 
-                // Sort by time
-                flights.sort((a, b) => a.sortTime - b.sortTime);
+                // Sort flights:
+                // 1. Active flights first
+                // 2. Then by time (ascending - soonest first)
+                flights.sort((a, b) => {
+                    // Active flights always come first
+                    if (a.isActive && !b.isActive) return -1;
+                    if (!a.isActive && b.isActive) return 1;
+                    
+                    // Then sort by time (ascending)
+                    return a.sortTime - b.sortTime;
+                });
                 
                 renderFlights(flights);
             } catch (error) {
