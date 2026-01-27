@@ -148,6 +148,52 @@
             gap: 10px;
         }
 
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .toggle-switch.active {
+            background: var(--accent-yellow);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+
+        .toggle-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--text-white);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         label {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.85rem;
@@ -523,6 +569,16 @@
                 <label>&nbsp;</label>
                 <button onclick="loadFlights()">Load Flights</button>
             </div>
+
+            <div class="control-group">
+                <label>Auto-Refresh (15 min)</label>
+                <div class="toggle-container">
+                    <div class="toggle-switch" id="autoRefreshToggle" onclick="toggleAutoRefresh()">
+                        <div class="toggle-slider"></div>
+                    </div>
+                    <span class="toggle-label" id="toggleLabel">OFF</span>
+                </div>
+            </div>
         </div>
 
         <div class="board-container">
@@ -673,9 +729,7 @@
         }
 
         // AviationStack API Integration
-        // Sign up for FREE at: https://aviationstack.com/
-        // Free plan: 500 requests/month (no credit card required)
-        const AVIATIONSTACK_API_KEY = '8d972ea55bf625f3baf55a32910ec047'; // Your API key
+        const AVIATIONSTACK_API_KEY = '8d972ea55bf625f3baf55a32910ec047';
         
         // Try multiple CORS proxies in order
         const CORS_PROXIES = [
@@ -688,10 +742,7 @@
         
         async function fetchFlightData(airportCode, flightType) {
             try {
-                // AviationStack endpoint
                 const baseUrl = 'http://api.aviationstack.com/v1/flights';
-                
-                // Build query parameters based on flight type
                 let params = new URLSearchParams({
                     access_key: AVIATIONSTACK_API_KEY,
                     limit: 100
@@ -702,7 +753,6 @@
                 } else if (flightType === 'arrivals') {
                     params.append('arr_iata', airportCode.toUpperCase());
                 } else {
-                    // For 'all', we'll need to make two requests
                     const departures = await fetchFlightsByType(airportCode, 'departures');
                     const arrivals = await fetchFlightsByType(airportCode, 'arrivals');
                     return [...departures, ...arrivals];
@@ -710,55 +760,42 @@
 
                 const apiUrl = `${baseUrl}?${params.toString()}`;
                 
-                // Try each proxy until one works
                 for (let i = 0; i < CORS_PROXIES.length; i++) {
                     const proxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
                     const proxy = CORS_PROXIES[proxyIndex];
                     const url = `${proxy}${encodeURIComponent(apiUrl)}`;
                     
                     console.log(`Trying proxy ${proxyIndex + 1}/${CORS_PROXIES.length}:`, proxy);
-                    console.log('Full URL:', url);
                     
                     try {
                         const response = await fetch(url);
                         
-                        console.log('Response status:', response.status);
-                        
                         if (!response.ok) {
                             const errorText = await response.text();
-                            console.error('API error response:', errorText);
                             throw new Error(`API returned ${response.status}: ${errorText}`);
                         }
 
                         const responseText = await response.text();
-                        console.log('Raw response (first 500 chars):', responseText.substring(0, 500));
-                        
                         const data = JSON.parse(responseText);
-                        console.log('Parsed API response:', data);
                         
                         if (data.error) {
                             throw new Error(data.error.info || data.error.message || JSON.stringify(data.error));
                         }
 
-                        // Success! Remember this proxy for next time
                         currentProxyIndex = proxyIndex;
-                        console.log('Successfully fetched data using proxy:', proxy);
-                        
                         return processAviationStackData(data, airportCode, flightType);
                         
                     } catch (proxyError) {
                         console.error(`Proxy ${proxyIndex + 1} failed:`, proxyError.message);
                         if (i === CORS_PROXIES.length - 1) {
-                            throw proxyError; // All proxies failed
+                            throw proxyError;
                         }
-                        // Try next proxy
                         continue;
                     }
                 }
 
             } catch (error) {
                 console.error('Flight data fetch error:', error);
-                console.error('Error stack:', error.stack);
                 throw error;
             }
         }
@@ -778,13 +815,10 @@
 
             const apiUrl = `${baseUrl}?${params.toString()}`;
             
-            // Try each proxy
             for (let i = 0; i < CORS_PROXIES.length; i++) {
                 const proxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
                 const proxy = CORS_PROXIES[proxyIndex];
                 const url = `${proxy}${encodeURIComponent(apiUrl)}`;
-                
-                console.log(`Fetching ${type} with proxy ${proxyIndex + 1}/${CORS_PROXIES.length}`);
                 
                 try {
                     const response = await fetch(url);
@@ -804,7 +838,6 @@
                     return processAviationStackData(data, airportCode, type);
                     
                 } catch (proxyError) {
-                    console.error(`Proxy ${proxyIndex + 1} failed for ${type}:`, proxyError.message);
                     if (i === CORS_PROXIES.length - 1) {
                         throw proxyError;
                     }
@@ -822,11 +855,9 @@
             const now = new Date();
 
             data.data.forEach(flight => {
-                // Extract airline info
                 const airlineIata = flight.airline?.iata || 'XX';
                 const flightNumber = flight.flight?.number || '0000';
 
-                // Parse times
                 const departureTime = flight.departure?.scheduled || flight.departure?.estimated;
                 const arrivalTime = flight.arrival?.scheduled || flight.arrival?.estimated;
                 
@@ -836,7 +867,6 @@
                 } else if (flightType === 'arrivals') {
                     displayTime = arrivalTime;
                 } else {
-                    // For 'all' type, use the appropriate time
                     displayTime = flight.departure?.airport === airportCode.toUpperCase() 
                         ? departureTime 
                         : arrivalTime;
@@ -848,7 +878,6 @@
                 const hours = timeObj.getHours().toString().padStart(2, '0');
                 const minutes = timeObj.getMinutes().toString().padStart(2, '0');
 
-                // Determine status and if flight is active
                 let status = 'Scheduled';
                 let statusClass = 'scheduled';
                 let isActive = false;
@@ -858,7 +887,7 @@
                 if (flightStatus === 'active' || flightStatus === 'en-route') {
                     status = 'In Flight';
                     statusClass = 'departed';
-                    isActive = true; // Mark as active for highlighting
+                    isActive = true;
                 } else if (flightStatus === 'landed') {
                     status = 'Arrived';
                     statusClass = 'departed';
@@ -873,19 +902,15 @@
                     statusClass = 'delayed';
                 }
 
-                // Check for delays
                 if (flight.departure?.delay > 0 || flight.arrival?.delay > 0) {
                     status = 'Delayed';
                     statusClass = 'delayed';
                 }
 
-                // Get origin and destination
                 const origin = flight.departure?.iata || 'N/A';
                 const destination = flight.arrival?.iata || 'N/A';
-
                 const isDeparture = flightType === 'departures' || 
                     (flightType === 'all' && flight.departure?.iata === airportCode.toUpperCase());
-
                 const route = `${origin} → ${destination}`;
 
                 flights.push({
@@ -900,8 +925,8 @@
                     aircraft: flight.aircraft?.registration || flight.aircraft?.iata || 'N/A',
                     isDeparture: isDeparture,
                     sortTime: timeObj.getTime(),
-                    isActive: isActive, // Add active flag
-                    timeDiff: timeObj - now // Time difference for sorting
+                    isActive: isActive,
+                    timeDiff: timeObj - now
                 });
             });
 
@@ -954,25 +979,6 @@
                 return;
             }
 
-            // Check if API key is set
-            if (AVIATIONSTACK_API_KEY === 'YOUR_API_KEY_HERE') {
-                board.innerHTML = `
-                    <div class="error">
-                        <strong>API Key Required</strong><br><br>
-                        To use this app with live flight data:<br><br>
-                        1. Sign up for FREE at:<br>
-                        <a href="https://aviationstack.com/product" target="_blank" style="color: var(--accent-yellow);">
-                            https://aviationstack.com/product
-                        </a><br><br>
-                        2. Get your API key (500 free requests/month)<br><br>
-                        3. Replace 'YOUR_API_KEY_HERE' in the code with your actual API key<br><br>
-                        <strong>No credit card required for free tier!</strong>
-                    </div>
-                `;
-                return;
-            }
-
-            // Show loading
             board.innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
@@ -983,15 +989,9 @@
             try {
                 const flights = await fetchFlightData(airportCode, flightType);
                 
-                // Sort flights:
-                // 1. Active flights first
-                // 2. Then by time (ascending - soonest first)
                 flights.sort((a, b) => {
-                    // Active flights always come first
                     if (a.isActive && !b.isActive) return -1;
                     if (!a.isActive && b.isActive) return 1;
-                    
-                    // Then sort by time (ascending)
                     return a.sortTime - b.sortTime;
                 });
                 
@@ -1005,25 +1005,62 @@
                         Error: ${error.message}<br><br>
                         
                         <strong>Common issues:</strong><br>
-                        • Invalid API key (check your key at aviationstack.com)<br>
+                        • Invalid API key<br>
                         • Invalid airport code (try LAX, JFK, ORD, ATL, DFW, SFO)<br>
-                        • Rate limit exceeded (500 requests/month on free plan)<br>
-                        • CORS proxy may be temporarily unavailable<br><br>
+                        • Rate limit exceeded (500 requests/month)<br>
+                        • CORS proxy temporarily unavailable<br><br>
                         
-                        <strong>Debug info:</strong><br>
-                        Check browser console (F12) for detailed error messages.
+                        Check browser console (F12) for details.
                     </div>
                 `;
             }
         }
 
-        // Auto-refresh every 2 minutes (120 seconds) if airport code is set
-        setInterval(() => {
-            const airportCode = document.getElementById('airportCode').value.trim();
-            if (airportCode && airportCode.length >= 3 && AVIATIONSTACK_API_KEY !== 'YOUR_API_KEY_HERE') {
-                loadFlights();
+        // AUTO-REFRESH TOGGLE FUNCTIONALITY
+        let autoRefreshEnabled = false;
+        let refreshInterval = null;
+
+        function toggleAutoRefresh() {
+            autoRefreshEnabled = !autoRefreshEnabled;
+            const toggle = document.getElementById('autoRefreshToggle');
+            const label = document.getElementById('toggleLabel');
+            
+            if (autoRefreshEnabled) {
+                toggle.classList.add('active');
+                label.textContent = 'ON';
+                startAutoRefresh();
+            } else {
+                toggle.classList.remove('active');
+                label.textContent = 'OFF';
+                stopAutoRefresh();
             }
-        }, 120000); // 2 minutes
+        }
+
+        function startAutoRefresh() {
+            // Clear any existing interval
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            
+            // Set interval for 15 minutes (900000 milliseconds)
+            refreshInterval = setInterval(() => {
+                const airportCode = document.getElementById('airportCode').value.trim();
+                if (airportCode && airportCode.length >= 3) {
+                    console.log('Auto-refreshing flights...');
+                    loadFlights();
+                }
+            }, 900000); // 15 minutes
+            
+            console.log('Auto-refresh enabled (every 15 minutes)');
+        }
+
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+            console.log('Auto-refresh disabled');
+        }
 
         // Allow Enter key to load flights
         document.getElementById('airportCode').addEventListener('keypress', (e) => {
@@ -1040,7 +1077,6 @@
             const seconds = now.getSeconds().toString().padStart(2, '0');
             document.getElementById('digitalClock').textContent = `${hours}:${minutes}:${seconds}`;
             
-            // Update timezone info (only once)
             if (!document.getElementById('timezoneInfo').textContent) {
                 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
                 const tzAbbr = now.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
@@ -1048,11 +1084,8 @@
             }
         }
 
-        // Update clock immediately and then every second
         updateClock();
         setInterval(updateClock, 1000);
-        
-        // Detect location and suggest airports on page load
         detectLocationAndSuggestAirports();
     </script>
 </body>
