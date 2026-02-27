@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Airport Ticker Board</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>Flight Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,475 +13,469 @@
         }
 
         :root {
-            --bg-primary: #000000;
-            --bg-secondary: #0a0a0a;
-            --accent-yellow: #ffd700;
-            --accent-orange: #ff6b35;
-            --text-white: #ffffff;
-            --text-muted: #cccccc;
-            --board-bg: #0a0a0a;
-            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            --bg-primary: #0a0a0a;
+            --bg-flap: #1a1a1a;
+            --bg-flap-light: #222222;
+            --accent-amber: #e8a910;
+            --accent-amber-dim: #b8860b;
+            --text-white: #d4d0c8;
+            --text-bright: #f0ece4;
+            --text-muted: #888880;
+            --split-line: #111111;
+            --row-border: #2a2a2a;
+            --status-green: #3da63d;
+            --status-red: #c43c3c;
+            --status-orange: #d4851a;
+            --status-blue: #4a8ab5;
+            --status-yellow: #c4a825;
         }
 
         body {
-            font-family: 'Share Tech Mono', monospace;
-            background: #000000;
+            font-family: 'Roboto Mono', monospace;
+            background: var(--bg-primary);
             min-height: 100vh;
             color: var(--text-white);
             overflow-x: hidden;
-            font-weight: bold;
         }
-
-        /* Removed animated background for TV display */
 
         .container {
-            position: relative;
-            z-index: 1;
-            max-width: 1400px;
+            max-width: 1500px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 12px 20px;
         }
 
+        /* ── COMPACT HEADER ── */
         header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            margin-bottom: 12px;
+            background: var(--bg-flap);
+            border-radius: 4px;
+            border-bottom: 2px solid var(--accent-amber-dim);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-title {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-amber);
+            text-transform: uppercase;
+            letter-spacing: 3px;
         }
 
         .digital-clock {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 4rem;
-            font-weight: 900;
-            color: var(--accent-yellow);
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            margin-bottom: 10px;
-            letter-spacing: 4px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            letter-spacing: 2px;
         }
 
         .timezone-info {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
-            margin-bottom: 10px;
-            font-weight: normal;
+            letter-spacing: 1px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .location-info {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--accent-orange);
-            margin-top: 10px;
-            font-weight: normal;
+            font-size: 0.7rem;
+            color: var(--accent-amber-dim);
         }
 
         .suggested-airports {
             display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 10px;
+            gap: 6px;
         }
 
         .airport-suggestion {
-            padding: 8px 16px;
-            background: rgba(255, 215, 0, 0.2);
-            border: 2px solid var(--accent-yellow);
-            border-radius: 8px;
-            color: var(--accent-yellow);
+            padding: 4px 10px;
+            background: transparent;
+            border: 1px solid var(--accent-amber-dim);
+            border-radius: 2px;
+            color: var(--accent-amber);
             cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: bold;
-            transition: all 0.3s ease;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
         }
 
         .airport-suggestion:hover {
-            background: rgba(255, 215, 0, 0.4);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+            background: var(--accent-amber);
+            color: #000;
         }
 
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 3.5rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-            letter-spacing: 8px;
-            margin-bottom: 10px;
-            animation: titleGlow 3s ease-in-out infinite;
-        }
-
-        @keyframes titleGlow {
-            0%, 100% { filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.6)); }
-            50% { filter: drop-shadow(0 0 50px rgba(255, 215, 0, 0.9)); }
-        }
-
-        .subtitle {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--text-white);
-            font-size: 1.1rem;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
+        /* ── CONTROLS BAR ── */
         .controls {
             display: flex;
-            gap: 20px;
-            justify-content: center;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 10px 16px;
+            background: var(--bg-flap);
+            border-radius: 4px;
             flex-wrap: wrap;
-            margin-bottom: 40px;
-            padding: 30px;
-            background: rgba(26, 31, 58, 0.6);
-            border-radius: 16px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 215, 0, 0.1);
-            box-shadow: var(--card-shadow);
+        }
+
+        .controls label {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .control-group {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            align-items: center;
+            gap: 6px;
         }
 
-        .toggle-container {
+        .controls input, .controls select {
+            font-family: 'Roboto Mono', monospace;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid #333;
+            background: #111;
+            color: var(--text-bright);
+            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls input:focus, .controls select:focus {
+            outline: none;
+            border-color: var(--accent-amber);
+        }
+
+        .controls input::placeholder {
+            color: #555;
+            text-transform: uppercase;
+        }
+
+        .btn {
+            font-family: 'Roboto Condensed', sans-serif;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: none;
+            background: var(--accent-amber);
+            color: #000;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 2px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--text-bright);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Toggle switch */
+        .toggle-group {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .toggle-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: 'Roboto Condensed', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .toggle-switch {
             position: relative;
-            width: 60px;
-            height: 30px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 30px;
+            width: 36px;
+            height: 18px;
             cursor: pointer;
-            transition: background 0.3s;
-            border: 2px solid rgba(255, 215, 0, 0.3);
         }
 
-        .toggle-switch.active {
-            background: var(--accent-yellow);
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
         }
 
         .toggle-slider {
             position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.3s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            inset: 0;
+            background: #333;
+            border-radius: 9px;
+            transition: 0.3s;
         }
 
-        .toggle-switch.active .toggle-slider {
-            transform: translateX(30px);
-        }
-
-        .toggle-label {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.85rem;
-            color: var(--text-white);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        label {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.85rem;
-            color: var(--accent-yellow);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        input, select, button {
-            font-family: 'Share Tech Mono', monospace;
-            padding: 14px 20px;
-            font-size: 1rem;
-            border: 2px solid rgba(255, 215, 0, 0.3);
-            background: rgba(10, 14, 39, 0.8);
-            color: var(--text-white);
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--accent-yellow);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
-        }
-
-        input::placeholder {
-            color: var(--text-muted);
-        }
-
-        button {
-            background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
-            border: none;
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-family: 'Orbitron', sans-serif;
-            position: relative;
-            overflow: hidden;
-        }
-
-        button::before {
+        .toggle-slider::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background: #888;
             border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
+            transition: 0.3s;
         }
 
-        button:hover::before {
-            width: 300px;
-            height: 300px;
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--accent-amber-dim);
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(18px);
+            background: var(--accent-amber);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
-
+        /* ── SPLIT-FLAP BOARD ── */
         .board-container {
-            background: var(--board-bg);
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: var(--card-shadow);
-            border: 2px solid rgba(255, 215, 0, 0.1);
-            position: relative;
+            background: #0d0d0d;
+            border-radius: 6px;
+            padding: 0;
             overflow: hidden;
-        }
-
-        .board-container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
-            animation: pulse 4s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.6; }
+            border: 2px solid #1a1a1a;
+            box-shadow:
+                0 4px 24px rgba(0,0,0,0.8),
+                inset 0 1px 0 rgba(255,255,255,0.02);
         }
 
         .board-header {
             display: grid;
-            grid-template-columns: 1.2fr 1fr 2fr 1fr 1fr 1fr 1fr;
-            gap: 15px;
-            padding: 15px 20px;
-            background: rgba(255, 215, 0, 0.15);
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 0;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            font-size: 1rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--text-white);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            backdrop-filter: blur(10px);
+            grid-template-columns: 0.9fr 0.7fr 2fr 0.8fr 0.5fr 0.9fr;
+            gap: 3px;
+            padding: 8px 6px 6px;
+            background: #0a0a0a;
+            border-bottom: 2px solid var(--accent-amber-dim);
         }
 
         .board-header div {
             text-align: center;
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent-amber);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 4px 0;
         }
 
         #flightBoard {
-            position: relative;
-            z-index: 1;
-            max-height: 600px;
+            max-height: calc(100vh - 200px);
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: var(--accent-yellow) rgba(26, 31, 58, 0.4);
+            scrollbar-color: #333 #111;
         }
 
         #flightBoard::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         #flightBoard::-webkit-scrollbar-track {
-            background: rgba(26, 31, 58, 0.4);
-            border-radius: 4px;
+            background: #111;
         }
 
         #flightBoard::-webkit-scrollbar-thumb {
-            background: var(--accent-yellow);
-            border-radius: 4px;
+            background: #333;
+            border-radius: 3px;
         }
 
-        #flightBoard::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-orange);
-        }
-
+        /* ── SPLIT-FLAP ROW ── */
         .flight-row {
             display: grid;
-            grid-template-columns: 1.2fr 1fr 2fr 1fr 1fr 1fr 1fr;
-            gap: 15px;
-            padding: 12px 20px;
-            margin-bottom: 2px;
-            background: rgba(26, 31, 58, 0.4);
-            border-left: 4px solid transparent;
-            transition: all 0.3s ease;
-            animation: slideIn 0.5s ease-out backwards;
+            grid-template-columns: 0.9fr 0.7fr 2fr 0.8fr 0.5fr 0.9fr;
+            gap: 3px;
+            padding: 2px 6px;
+            background: #0d0d0d;
+            border-bottom: 1px solid #151515;
+            animation: rowAppear 0.3s ease-out backwards;
         }
 
-        .flight-row.active {
-            background: rgba(255, 215, 0, 0.15);
-            border-left-color: var(--accent-yellow);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        @keyframes rowAppear {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        .flight-row.active .flight-cell {
-            font-weight: 900;
+        .flight-row.in-air-row {
+            background: #0d1205;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        .flight-row.in-air-row .flap-cell {
+            border-color: #1a2a10;
         }
 
-        .flight-row:hover {
-            background: rgba(26, 31, 58, 0.7);
-            border-left-color: var(--accent-yellow);
-            transform: translateX(5px);
-            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
-        }
-
-        .flight-cell {
+        /* ── INDIVIDUAL FLAP CELL ── */
+        .flap-cell {
+            background: var(--bg-flap);
+            border: 1px solid #252525;
+            border-radius: 2px;
+            padding: 6px 8px;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            min-height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            font-weight: bold;
-            color: var(--text-white);
+            /* The signature split-flap horizontal line */
+            background-image: linear-gradient(
+                to bottom,
+                var(--bg-flap) 0%,
+                var(--bg-flap) 48%,
+                var(--split-line) 48%,
+                var(--split-line) 52%,
+                var(--bg-flap-light) 52%,
+                var(--bg-flap-light) 100%
+            );
+            /* Subtle top/bottom shadow like physical flaps */
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.04),
+                inset 0 -1px 0 rgba(0,0,0,0.3);
         }
 
-        .flight-number {
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            color: var(--accent-yellow);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .flap-cell.airline-cell {
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            color: var(--text-white);
+            gap: 6px;
+            justify-content: flex-start;
+            text-align: left;
+            padding-left: 6px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         .airline-logo {
-            width: 32px;
-            height: 32px;
+            width: 22px;
+            height: 22px;
             object-fit: contain;
             background: white;
-            border-radius: 4px;
-            padding: 4px;
+            border-radius: 2px;
+            padding: 2px;
+            flex-shrink: 0;
         }
 
-        .airline-name {
+        .flap-cell.flight-num-cell {
+            color: var(--accent-amber);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .flap-cell.route-cell {
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            justify-content: center;
+            text-align: center;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .flap-cell.route-cell .route-arrow {
+            color: var(--accent-amber-dim);
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        .flap-cell.route-cell .route-code {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+
+        .flap-cell.time-cell {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-bright);
+        }
+
+        .flap-cell.gate-cell {
+            font-size: 0.85rem;
             color: var(--text-white);
-            font-size: 1rem;
-            font-weight: bold;
         }
 
-        .destination {
-            font-weight: bold;
-            color: var(--text-white);
-            font-size: 1.1rem;
-        }
-
-        .status {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: bold;
+        /* ── STATUS FLAP ── */
+        .flap-cell.status-cell {
+            font-size: 0.7rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
 
-        .status.scheduled {
-            background: rgba(100, 200, 255, 0.2);
-            color: #64c8ff;
-            border: 1px solid #64c8ff;
+        .flap-cell.status-cell.status-scheduled {
+            color: var(--status-blue);
         }
 
-        .status.boarding {
-            background: rgba(255, 215, 0, 0.2);
-            color: var(--accent-yellow);
-            border: 1px solid var(--accent-yellow);
-            animation: blink 1.5s ease-in-out infinite;
+        .flap-cell.status-cell.status-boarding {
+            color: var(--status-yellow);
+            animation: flapBlink 2s ease-in-out infinite;
         }
 
-        .status.departed {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4caf50;
-            border: 1px solid #4caf50;
+        .flap-cell.status-cell.status-in-air {
+            color: var(--status-green);
         }
 
-        .status.delayed {
-            background: rgba(255, 107, 53, 0.2);
-            color: var(--accent-orange);
-            border: 1px solid var(--accent-orange);
+        .flap-cell.status-cell.status-landed {
+            color: var(--status-green);
         }
 
-        .status.cancelled {
-            background: rgba(244, 67, 54, 0.2);
-            color: #f44336;
-            border: 1px solid #f44336;
+        .flap-cell.status-cell.status-delayed {
+            color: var(--status-orange);
         }
 
-        @keyframes blink {
+        .flap-cell.status-cell.status-cancelled {
+            color: var(--status-red);
+        }
+
+        @keyframes flapBlink {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.4; }
         }
 
+        /* ── LOADING / EMPTY STATES ── */
         .loading {
             text-align: center;
-            padding: 60px;
-            font-size: 1.2rem;
+            padding: 40px;
             color: var(--text-muted);
+            font-size: 0.9rem;
         }
 
         .spinner {
             display: inline-block;
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 215, 0, 0.1);
-            border-top-color: var(--accent-yellow);
+            width: 30px;
+            height: 30px;
+            border: 3px solid #222;
+            border-top-color: var(--accent-amber);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         @keyframes spin {
@@ -490,50 +484,87 @@
 
         .error {
             text-align: center;
-            padding: 40px;
-            background: rgba(244, 67, 54, 0.1);
-            border: 2px solid #f44336;
-            border-radius: 12px;
-            color: #f44336;
-            font-size: 1.1rem;
+            padding: 30px;
+            background: rgba(196, 60, 60, 0.08);
+            border: 1px solid #3a1a1a;
+            border-radius: 4px;
+            color: var(--status-red);
+            font-size: 0.85rem;
+            margin: 10px;
+        }
+
+        .error a {
+            color: var(--accent-amber);
         }
 
         .no-flights {
             text-align: center;
-            padding: 60px;
+            padding: 40px;
             color: var(--text-muted);
-            font-size: 1.2rem;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
         }
 
+        .demo-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--accent-amber-dim);
+            color: #000;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 2px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .refresh-info {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        /* ── MOBILE ── */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-                letter-spacing: 4px;
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .toggle-group {
+                margin-left: 0;
             }
 
             .board-header, .flight-row {
                 grid-template-columns: 1fr;
-                gap: 10px;
+                gap: 2px;
             }
 
             .board-header {
                 display: none;
             }
 
-            .flight-cell {
-                justify-content: flex-start;
-                padding: 5px 0;
-            }
-
-            .flight-cell::before {
+            .flap-cell::before {
                 content: attr(data-label);
-                font-weight: bold;
-                color: var(--accent-yellow);
-                margin-right: 10px;
-                min-width: 100px;
+                font-weight: 700;
+                color: var(--accent-amber);
+                margin-right: 8px;
+                font-size: 0.65rem;
+                min-width: 70px;
+                text-align: left;
             }
 
-            .flight-number {
+            .flap-cell {
+                justify-content: flex-start;
+            }
+
+            .flap-cell.airline-cell {
                 justify-content: flex-start;
             }
         }
@@ -541,148 +572,185 @@
 </head>
 <body>
     <div class="container">
+        <!-- ── COMPACT HEADER ── -->
         <header>
-            <div class="digital-clock" id="digitalClock">00:00:00</div>
-            <div class="timezone-info" id="timezoneInfo"></div>
-            <h1>Flight Board</h1>
-            <div class="subtitle">Live Departure & Arrival Information</div>
-            <div class="location-info" id="locationInfo"></div>
-            <div class="suggested-airports" id="suggestedAirports"></div>
+            <div class="header-left">
+                <span class="header-title">✈ Flight Board</span>
+                <span class="digital-clock" id="digitalClock">00:00:00</span>
+                <span class="timezone-info" id="timezoneInfo"></span>
+            </div>
+            <div class="header-right">
+                <span class="location-info" id="locationInfo"></span>
+                <div class="suggested-airports" id="suggestedAirports"></div>
+            </div>
         </header>
 
+        <!-- ── CONTROLS ── -->
         <div class="controls">
             <div class="control-group">
-                <label for="airportCode">Airport Code</label>
-                <input type="text" id="airportCode" placeholder="e.g., LAX, JFK, ORD" maxlength="4">
+                <label for="airportCode">Airport</label>
+                <input type="text" id="airportCode" placeholder="IATA" maxlength="4" style="width: 80px;">
             </div>
 
             <div class="control-group">
-                <label for="flightType">Flight Type</label>
+                <label for="flightType">View</label>
                 <select id="flightType">
-                    <option value="all">All Flights</option>
                     <option value="departures">Departures</option>
                     <option value="arrivals">Arrivals</option>
+                    <option value="all">All Flights</option>
                 </select>
             </div>
 
             <div class="control-group">
-                <label>&nbsp;</label>
-                <button onclick="loadFlights()">Load Flights</button>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="showInAir">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Show In-Air</span>
             </div>
 
-            <div class="control-group">
-                <label>Auto-Refresh (15 min)</label>
-                <div class="toggle-container">
-                    <div class="toggle-switch" id="autoRefreshToggle" onclick="toggleAutoRefresh()">
-                        <div class="toggle-slider"></div>
-                    </div>
-                    <span class="toggle-label" id="toggleLabel">OFF</span>
-                </div>
+            <button class="btn" onclick="loadFlights()">Load</button>
+
+            <div class="toggle-group">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoRefreshToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Auto-Refresh</span>
+                <span class="refresh-info" id="refreshInfo"></span>
             </div>
         </div>
 
+        <!-- ── BOARD ── -->
         <div class="board-container">
             <div class="board-header">
                 <div>Airline</div>
                 <div>Flight</div>
-                <div>Route</div>
+                <div id="routeHeader">Route</div>
                 <div>Time</div>
                 <div>Gate</div>
                 <div>Status</div>
-                <div>Aircraft</div>
             </div>
-
-            <div id="flightBoard">
-                <div class="no-flights">Enter an airport code and click "Load Flights" to begin</div>
-            </div>
+            <div id="flightBoard"></div>
         </div>
     </div>
 
     <script>
-        // Airline logo mapping - using a free logo API
-        const airlineLogos = {
-            'AA': 'https://images.kiwi.com/airlines/64/AA.png',
-            'DL': 'https://images.kiwi.com/airlines/64/DL.png',
-            'UA': 'https://images.kiwi.com/airlines/64/UA.png',
-            'WN': 'https://images.kiwi.com/airlines/64/WN.png',
-            'B6': 'https://images.kiwi.com/airlines/64/B6.png',
-            'AS': 'https://images.kiwi.com/airlines/64/AS.png',
-            'NK': 'https://images.kiwi.com/airlines/64/NK.png',
-            'F9': 'https://images.kiwi.com/airlines/64/F9.png',
-            'G4': 'https://images.kiwi.com/airlines/64/G4.png',
-            'SY': 'https://images.kiwi.com/airlines/64/SY.png',
-        };
+        // ─── CONFIG ───
+        const AVIATIONSTACK_API_KEY = '8d972ea55bf625f3baf55a32910ec047';
+        const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
+        let autoRefreshTimer = null;
+        let isShowingDemo = true;
+        let apiCallCount = 0; // Track calls this session
+        let lastRefreshTime = null;
+        let previousFlightData = []; // Store previous data for "landed" detection
 
-        // Airline names mapping
+        // Try multiple CORS proxies in order
+        const CORS_PROXIES = [
+            'https://api.codetabs.com/v1/proxy?quest=',
+            'https://corsproxy.io/?',
+            'https://api.allorigins.win/raw?url='
+        ];
+        let currentProxyIndex = 0;
+
+        // ─── AIRLINE DATABASE ───
         const airlineNames = {
-            'AA': 'American Airlines',
-            'DL': 'Delta Air Lines',
-            'UA': 'United Airlines',
-            'WN': 'Southwest Airlines',
-            'B6': 'JetBlue Airways',
-            'AS': 'Alaska Airlines',
-            'NK': 'Spirit Airlines',
-            'F9': 'Frontier Airlines',
-            'G4': 'Allegiant Air',
-            'SY': 'Sun Country Airlines',
-            'AC': 'Air Canada',
-            'BA': 'British Airways',
-            'LH': 'Lufthansa',
-            'AF': 'Air France',
-            'KL': 'KLM',
-            'EK': 'Emirates',
-            'QR': 'Qatar Airways',
-            'SQ': 'Singapore Airlines',
-            'CX': 'Cathay Pacific',
-            'QF': 'Qantas',
-            'NH': 'ANA',
-            'JL': 'Japan Airlines',
-            'AZ': 'Alitalia',
-            'IB': 'Iberia',
-            'LX': 'Swiss',
-            'OS': 'Austrian Airlines',
-            'SK': 'SAS',
-            'AY': 'Finnair',
-            'TP': 'TAP Portugal',
-            'VS': 'Virgin Atlantic',
-            'EI': 'Aer Lingus',
-            'LY': 'El Al',
-            'TK': 'Turkish Airlines',
-            'SU': 'Aeroflot',
-            'AM': 'Aeromexico',
-            'CM': 'Copa Airlines',
-            'AV': 'Avianca',
-            'LA': 'LATAM',
-            'AR': 'Aerolineas Argentinas',
-            // Cargo carriers
-            'FX': 'FedEx',
-            'UPS': 'UPS',
-            '5X': 'UPS',
-            'CK': 'Kalitta Air (Cargo)',
-            'ABX': 'ABX Air (Cargo)',
-            'ATN': 'Air Transport Intl (Cargo)',
-            // Regional/Charter
-            '9E': 'Endeavor Air',
-            'YX': 'Midwest Express',
-            'OH': 'PSA Airlines',
-            'OO': 'SkyWest',
-            'YV': 'Mesa Airlines',
-            'MQ': 'Envoy Air',
-            '9K': 'Cape Air',
-            // Special codes
-            'XX': 'GA/Military Flight',
-            '7Z': 'Charter/Private'
+            'AA': 'American Airlines', 'DL': 'Delta Air Lines', 'UA': 'United Airlines',
+            'WN': 'Southwest', 'B6': 'JetBlue', 'AS': 'Alaska Airlines',
+            'NK': 'Spirit', 'F9': 'Frontier', 'G4': 'Allegiant',
+            'SY': 'Sun Country', 'HA': 'Hawaiian Airlines', 'QX': 'Horizon Air',
+            'OO': 'SkyWest', 'YX': 'Republic', 'MQ': 'Envoy Air',
+            'OH': 'PSA Airlines', 'YV': 'Mesa Airlines', '9E': 'Endeavor Air',
+            'CP': 'Compass', 'PT': 'Piedmont', 'C5': 'CommutAir',
+            'ZW': 'Air Wisconsin', 'AX': 'Trans States', 'EV': 'ExpressJet',
+            'G7': 'GoJet', 'KS': 'PenAir', 'EM': 'Empire Airlines',
+            'AC': 'Air Canada', 'WS': 'WestJet', 'AM': 'Aeroméxico',
+            'BA': 'British Airways', 'LH': 'Lufthansa', 'AF': 'Air France',
+            'KL': 'KLM', 'EK': 'Emirates', 'QR': 'Qatar Airways',
+            'SQ': 'Singapore Airlines', 'CX': 'Cathay Pacific', 'NH': 'ANA',
+            'JL': 'Japan Airlines', 'TK': 'Turkish Airlines', 'LX': 'SWISS',
+            'IB': 'Iberia', 'AZ': 'ITA Airways', 'SK': 'SAS',
+            'FX': 'FedEx', 'UPS': 'UPS Airlines', '5X': 'UPS Airlines',
+            'XX': 'Military / Gen Aviation'
         };
 
-        // Major US airports with coordinates for location-based suggestions
+        // ─── AIRPORT CITY NAMES ───
+        const airportCityNames = {
+            'ATL': 'Atlanta', 'DFW': 'Dallas-Ft Worth', 'DEN': 'Denver', 'ORD': 'Chicago',
+            'LAX': 'Los Angeles', 'JFK': 'New York', 'LGA': 'New York', 'EWR': 'Newark',
+            'LAS': 'Las Vegas', 'PHX': 'Phoenix', 'MIA': 'Miami', 'IAH': 'Houston',
+            'HOU': 'Houston', 'SEA': 'Seattle', 'SFO': 'San Francisco', 'MCO': 'Orlando',
+            'BOS': 'Boston', 'MSP': 'Minneapolis', 'DTW': 'Detroit', 'PHL': 'Philadelphia',
+            'CLT': 'Charlotte', 'CHS': 'Charleston', 'BWI': 'Baltimore', 'SAN': 'San Diego',
+            'TPA': 'Tampa', 'PDX': 'Portland', 'STL': 'St. Louis', 'BNA': 'Nashville',
+            'AUS': 'Austin', 'SAT': 'San Antonio', 'SLC': 'Salt Lake City', 'RDU': 'Raleigh-Durham',
+            'MKE': 'Milwaukee', 'IND': 'Indianapolis', 'CMH': 'Columbus', 'PIT': 'Pittsburgh',
+            'CVG': 'Cincinnati', 'JAX': 'Jacksonville', 'OAK': 'Oakland', 'SJC': 'San Jose',
+            'SMF': 'Sacramento', 'MCI': 'Kansas City', 'MSY': 'New Orleans', 'RIC': 'Richmond',
+            'SAV': 'Savannah', 'MYR': 'Myrtle Beach', 'GSP': 'Greenville', 'CAE': 'Columbia',
+            'RSW': 'Ft Myers', 'PBI': 'West Palm Beach', 'FLL': 'Ft Lauderdale',
+            'MDW': 'Chicago', 'DAL': 'Dallas', 'SNA': 'Orange County', 'BUR': 'Burbank',
+            'ABQ': 'Albuquerque', 'TUS': 'Tucson', 'OMA': 'Omaha', 'OKC': 'Oklahoma City',
+            'MEM': 'Memphis', 'BHM': 'Birmingham', 'GSO': 'Greensboro', 'ROC': 'Rochester',
+            'SYR': 'Syracuse', 'BUF': 'Buffalo', 'ALB': 'Albany', 'PVD': 'Providence',
+            'PWM': 'Portland ME', 'BDL': 'Hartford', 'ORF': 'Norfolk', 'AVL': 'Asheville',
+            'DSM': 'Des Moines', 'LIT': 'Little Rock', 'TUL': 'Tulsa', 'ICT': 'Wichita',
+            'CLE': 'Cleveland', 'DCA': 'Washington DC', 'IAD': 'Washington DC',
+            'ANC': 'Anchorage', 'HNL': 'Honolulu', 'OGG': 'Maui', 'LIH': 'Kauai',
+            'KOA': 'Kona',
+            // International
+            'YYZ': 'Toronto', 'YVR': 'Vancouver', 'YUL': 'Montreal', 'YOW': 'Ottawa',
+            'MEX': 'Mexico City', 'CUN': 'Cancún', 'GDL': 'Guadalajara', 'SJD': 'Los Cabos',
+            'LHR': 'London', 'LGW': 'London', 'CDG': 'Paris', 'FRA': 'Frankfurt',
+            'AMS': 'Amsterdam', 'MAD': 'Madrid', 'BCN': 'Barcelona', 'FCO': 'Rome',
+            'MUC': 'Munich', 'ZRH': 'Zurich', 'DUB': 'Dublin', 'LIS': 'Lisbon',
+            'CPH': 'Copenhagen', 'ARN': 'Stockholm', 'OSL': 'Oslo', 'HEL': 'Helsinki',
+            'IST': 'Istanbul', 'ATH': 'Athens', 'VIE': 'Vienna', 'BRU': 'Brussels',
+            'NRT': 'Tokyo', 'HND': 'Tokyo', 'ICN': 'Seoul', 'PEK': 'Beijing',
+            'PVG': 'Shanghai', 'HKG': 'Hong Kong', 'SIN': 'Singapore', 'BKK': 'Bangkok',
+            'SYD': 'Sydney', 'MEL': 'Melbourne', 'AKL': 'Auckland',
+            'DXB': 'Dubai', 'DOH': 'Doha', 'GRU': 'São Paulo', 'BOG': 'Bogotá',
+            'LIM': 'Lima', 'SCL': 'Santiago', 'PTY': 'Panama City',
+            'NAS': 'Nassau', 'MBJ': 'Montego Bay', 'SJU': 'San Juan', 'STT': 'St. Thomas',
+            'PUJ': 'Punta Cana', 'BGI': 'Barbados', 'AUA': 'Aruba'
+        };
+
+        function getCityName(iata) {
+            return airportCityNames[iata] || iata;
+        }
+
+        // ─── DEMO DATA ───
+        // Shown on initial load before user enters an airport code
+        function getDemoFlights() {
+            const now = new Date();
+            const makeTime = (offsetMin) => {
+                const t = new Date(now.getTime() + offsetMin * 60000);
+                return t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0');
+            };
+
+            return [
+                { airline: 'DL', flightNumber: 'DL1742', flightNumOnly: '1742', route: 'CHS → ATL', depIata: 'CHS', arrIata: 'ATL', time: makeTime(-10), gate: 'B4', status: 'Boarding', statusClass: 'boarding', isInAir: false, isLanded: false, sortTime: now.getTime() - 600000 },
+                { airline: 'AA', flightNumber: 'AA2284', flightNumOnly: '2284', route: 'CHS → CLT', depIata: 'CHS', arrIata: 'CLT', time: makeTime(15), gate: 'A2', status: 'Scheduled', statusClass: 'scheduled', isInAir: false, isLanded: false, sortTime: now.getTime() + 900000 },
+                { airline: 'UA', flightNumber: 'UA648', flightNumOnly: '648', route: 'CHS → EWR', depIata: 'CHS', arrIata: 'EWR', time: makeTime(35), gate: 'B7', status: 'Scheduled', statusClass: 'scheduled', isInAir: false, isLanded: false, sortTime: now.getTime() + 2100000 },
+                { airline: 'WN', flightNumber: 'WN3056', flightNumOnly: '3056', route: 'CHS → BWI', depIata: 'CHS', arrIata: 'BWI', time: makeTime(50), gate: 'A5', status: 'Scheduled', statusClass: 'scheduled', isInAir: false, isLanded: false, sortTime: now.getTime() + 3000000 },
+                { airline: 'B6', flightNumber: 'B6816', flightNumOnly: '816', route: 'CHS → BOS', depIata: 'CHS', arrIata: 'BOS', time: makeTime(75), gate: 'B2', status: 'Scheduled', statusClass: 'scheduled', isInAir: false, isLanded: false, sortTime: now.getTime() + 4500000 },
+                { airline: 'DL', flightNumber: 'DL2490', flightNumOnly: '2490', route: 'CHS → JFK', depIata: 'CHS', arrIata: 'JFK', time: makeTime(110), gate: 'B6', status: 'Scheduled', statusClass: 'scheduled', isInAir: false, isLanded: false, sortTime: now.getTime() + 6600000 },
+                { airline: 'AA', flightNumber: 'AA1876', flightNumOnly: '1876', route: 'CHS → DFW', depIata: 'CHS', arrIata: 'DFW', time: makeTime(140), gate: 'A1', status: 'Scheduled', statusClass: 'scheduled', isInAir: false, isLanded: false, sortTime: now.getTime() + 8400000 },
+                { airline: 'UA', flightNumber: 'UA1202', flightNumOnly: '1202', route: 'CHS → ORD', depIata: 'CHS', arrIata: 'ORD', time: makeTime(165), gate: 'B3', status: 'Scheduled', statusClass: 'scheduled', isInAir: false, isLanded: false, sortTime: now.getTime() + 9900000 },
+                { airline: 'F9', flightNumber: 'F9752', flightNumOnly: '752', route: 'CHS → DEN', depIata: 'CHS', arrIata: 'DEN', time: makeTime(195), gate: 'A4', status: 'Delayed', statusClass: 'delayed', isInAir: false, isLanded: false, sortTime: now.getTime() + 11700000 },
+                { airline: 'WN', flightNumber: 'WN1108', flightNumOnly: '1108', route: 'CHS → MDW', depIata: 'CHS', arrIata: 'MDW', time: makeTime(220), gate: 'A6', status: 'Scheduled', statusClass: 'scheduled', isInAir: false, isLanded: false, sortTime: now.getTime() + 13200000 },
+            ];
+        }
+
+        // ─── AIRPORTS DATABASE ───
         const majorAirports = [
             { code: 'ATL', name: 'Atlanta', lat: 33.6407, lon: -84.4277 },
             { code: 'DFW', name: 'Dallas/Fort Worth', lat: 32.8998, lon: -97.0403 },
             { code: 'DEN', name: 'Denver', lat: 39.8561, lon: -104.6737 },
-            { code: 'ORD', name: 'Chicago O\'Hare', lat: 41.9742, lon: -87.9073 },
+            { code: 'ORD', name: "Chicago O'Hare", lat: 41.9742, lon: -87.9073 },
             { code: 'LAX', name: 'Los Angeles', lat: 33.9425, lon: -118.408 },
             { code: 'JFK', name: 'New York JFK', lat: 40.6413, lon: -73.7781 },
-            { code: 'LGA', name: 'New York LaGuardia', lat: 40.7769, lon: -73.8740 },
+            { code: 'LGA', name: 'LaGuardia', lat: 40.7769, lon: -73.8740 },
             { code: 'LAS', name: 'Las Vegas', lat: 36.0840, lon: -115.1537 },
             { code: 'PHX', name: 'Phoenix', lat: 33.4352, lon: -112.0101 },
             { code: 'MIA', name: 'Miami', lat: 25.7959, lon: -80.2870 },
@@ -703,155 +771,71 @@
             { code: 'STL', name: 'St. Louis', lat: 38.7499, lon: -90.3697 }
         ];
 
-        // Calculate distance between two coordinates (Haversine formula)
+        // ─── GEOLOCATION ───
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 3959; // Earth's radius in miles
+            const R = 3959;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
-        // Get user's location and suggest nearest airports
         function detectLocationAndSuggestAirports() {
             if ('geolocation' in navigator) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const userLat = position.coords.latitude;
                         const userLon = position.coords.longitude;
-                        
-                        // Calculate distances to all airports
-                        const airportsWithDistance = majorAirports.map(airport => ({
-                            ...airport,
-                            distance: calculateDistance(userLat, userLon, airport.lat, airport.lon)
+                        const airportsWithDistance = majorAirports.map(a => ({
+                            ...a, distance: calculateDistance(userLat, userLon, a.lat, a.lon)
                         }));
-                        
-                        // Sort by distance
                         airportsWithDistance.sort((a, b) => a.distance - b.distance);
-                        
-                        // Get nearest 3 airports
                         const nearest = airportsWithDistance.slice(0, 3);
-                        
-                        // Display location info
-                        const locationInfo = document.getElementById('locationInfo');
-                        locationInfo.innerHTML = `📍 Detected Location: ${userLat.toFixed(2)}°, ${userLon.toFixed(2)}°`;
-                        
-                        // Display suggested airports
-                        const suggestedDiv = document.getElementById('suggestedAirports');
-                        suggestedDiv.innerHTML = nearest.map(airport => 
-                            `<div class="airport-suggestion" onclick="selectAirport('${airport.code}')">
-                                ${airport.code} - ${airport.name} (${Math.round(airport.distance)} mi)
-                            </div>`
+
+                        document.getElementById('locationInfo').textContent =
+                            `📍 ${userLat.toFixed(1)}°, ${userLon.toFixed(1)}°`;
+
+                        document.getElementById('suggestedAirports').innerHTML = nearest.map(a =>
+                            `<div class="airport-suggestion" onclick="selectAirport('${a.code}')">${a.code} (${Math.round(a.distance)}mi)</div>`
                         ).join('');
                     },
-                    (error) => {
-                        console.log('Geolocation not available:', error);
-                        // Show some default suggestions
-                        const suggestedDiv = document.getElementById('suggestedAirports');
-                        suggestedDiv.innerHTML = `
-                            <div class="airport-suggestion" onclick="selectAirport('ATL')">ATL - Atlanta</div>
-                            <div class="airport-suggestion" onclick="selectAirport('LAX')">LAX - Los Angeles</div>
-                            <div class="airport-suggestion" onclick="selectAirport('ORD')">ORD - Chicago</div>
-                        `;
-                    }
+                    () => showDefaultSuggestions()
                 );
             } else {
-                // Geolocation not supported - show popular airports
-                const suggestedDiv = document.getElementById('suggestedAirports');
-                suggestedDiv.innerHTML = `
-                    <div class="airport-suggestion" onclick="selectAirport('ATL')">ATL - Atlanta</div>
-                    <div class="airport-suggestion" onclick="selectAirport('LAX')">LAX - Los Angeles</div>
-                    <div class="airport-suggestion" onclick="selectAirport('ORD')">ORD - Chicago</div>
-                `;
+                showDefaultSuggestions();
             }
         }
 
-        // Select airport from suggestion
+        function showDefaultSuggestions() {
+            document.getElementById('suggestedAirports').innerHTML = `
+                <div class="airport-suggestion" onclick="selectAirport('CHS')">CHS</div>
+                <div class="airport-suggestion" onclick="selectAirport('ATL')">ATL</div>
+                <div class="airport-suggestion" onclick="selectAirport('CLT')">CLT</div>
+            `;
+        }
+
         function selectAirport(code) {
             document.getElementById('airportCode').value = code;
             loadFlights();
         }
 
-        // AviationStack API Integration
-        const AVIATIONSTACK_API_KEY = '8d972ea55bf625f3baf55a32910ec047';
-        
-        // Try multiple CORS proxies in order
-        const CORS_PROXIES = [
-            'https://api.codetabs.com/v1/proxy?quest=',
-            'https://corsproxy.io/?',
-            'https://api.allorigins.win/raw?url='
-        ];
-        
-        let currentProxyIndex = 0;
-        
+        // ─── API FETCH ───
         async function fetchFlightData(airportCode, flightType) {
-            try {
-                const baseUrl = 'http://api.aviationstack.com/v1/flights';
-                let params = new URLSearchParams({
-                    access_key: AVIATIONSTACK_API_KEY,
-                    limit: 100
-                });
-
-                if (flightType === 'departures') {
-                    params.append('dep_iata', airportCode.toUpperCase());
-                } else if (flightType === 'arrivals') {
-                    params.append('arr_iata', airportCode.toUpperCase());
-                } else {
-                    const departures = await fetchFlightsByType(airportCode, 'departures');
-                    const arrivals = await fetchFlightsByType(airportCode, 'arrivals');
-                    return [...departures, ...arrivals];
-                }
-
-                const apiUrl = `${baseUrl}?${params.toString()}`;
-                
-                for (let i = 0; i < CORS_PROXIES.length; i++) {
-                    const proxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
-                    const proxy = CORS_PROXIES[proxyIndex];
-                    const url = `${proxy}${encodeURIComponent(apiUrl)}`;
-                    
-                    console.log(`Trying proxy ${proxyIndex + 1}/${CORS_PROXIES.length}:`, proxy);
-                    
-                    try {
-                        const response = await fetch(url);
-                        
-                        if (!response.ok) {
-                            const errorText = await response.text();
-                            throw new Error(`API returned ${response.status}: ${errorText}`);
-                        }
-
-                        const responseText = await response.text();
-                        const data = JSON.parse(responseText);
-                        
-                        if (data.error) {
-                            throw new Error(data.error.info || data.error.message || JSON.stringify(data.error));
-                        }
-
-                        currentProxyIndex = proxyIndex;
-                        return processAviationStackData(data, airportCode, flightType);
-                        
-                    } catch (proxyError) {
-                        console.error(`Proxy ${proxyIndex + 1} failed:`, proxyError.message);
-                        if (i === CORS_PROXIES.length - 1) {
-                            throw proxyError;
-                        }
-                        continue;
-                    }
-                }
-
-            } catch (error) {
-                console.error('Flight data fetch error:', error);
-                throw error;
+            if (flightType === 'all') {
+                const departures = await fetchFlightsByType(airportCode, 'departures');
+                const arrivals = await fetchFlightsByType(airportCode, 'arrivals');
+                return [...departures, ...arrivals];
             }
+            return await fetchFlightsByType(airportCode, flightType);
         }
 
         async function fetchFlightsByType(airportCode, type) {
             const baseUrl = 'http://api.aviationstack.com/v1/flights';
             const params = new URLSearchParams({
                 access_key: AVIATIONSTACK_API_KEY,
-                limit: 50
+                limit: type === 'all' ? 50 : 100
             });
 
             if (type === 'departures') {
@@ -861,103 +845,98 @@
             }
 
             const apiUrl = `${baseUrl}?${params.toString()}`;
-            
+            apiCallCount++;
+
             for (let i = 0; i < CORS_PROXIES.length; i++) {
                 const proxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
                 const proxy = CORS_PROXIES[proxyIndex];
                 const url = `${proxy}${encodeURIComponent(apiUrl)}`;
-                
+
                 try {
                     const response = await fetch(url);
-                    
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`API returned ${response.status}: ${errorText}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-                    const responseText = await response.text();
-                    const data = JSON.parse(responseText);
-                    
-                    if (data.error) {
-                        throw new Error(data.error.info || data.error.message || JSON.stringify(data.error));
-                    }
+                    const data = JSON.parse(await response.text());
+                    if (data.error) throw new Error(data.error.info || data.error.message || JSON.stringify(data.error));
 
+                    currentProxyIndex = proxyIndex;
                     return processAviationStackData(data, airportCode, type);
-                    
-                } catch (proxyError) {
-                    if (i === CORS_PROXIES.length - 1) {
-                        throw proxyError;
-                    }
-                    continue;
+                } catch (e) {
+                    console.error(`Proxy ${proxyIndex + 1} failed:`, e.message);
+                    if (i === CORS_PROXIES.length - 1) throw e;
                 }
             }
+            return [];
         }
 
         function processAviationStackData(data, airportCode, flightType) {
-            if (!data.data || data.data.length === 0) {
-                return [];
-            }
+            if (!data.data || data.data.length === 0) return [];
 
             const flights = [];
-            const now = new Date();
+            const code = airportCode.toUpperCase();
 
             data.data.forEach(flight => {
                 const airlineIata = flight.airline?.iata || 'XX';
                 const flightNumber = flight.flight?.number || '0000';
-
                 const departureTime = flight.departure?.scheduled || flight.departure?.estimated;
                 const arrivalTime = flight.arrival?.scheduled || flight.arrival?.estimated;
-                
-                let displayTime;
-                if (flightType === 'departures') {
-                    displayTime = departureTime;
-                } else if (flightType === 'arrivals') {
-                    displayTime = arrivalTime;
-                } else {
-                    displayTime = flight.departure?.airport === airportCode.toUpperCase() 
-                        ? departureTime 
-                        : arrivalTime;
-                }
 
+                let displayTime = flightType === 'arrivals' ? arrivalTime : departureTime;
                 if (!displayTime) return;
 
                 const timeObj = new Date(displayTime);
                 const hours = timeObj.getHours().toString().padStart(2, '0');
                 const minutes = timeObj.getMinutes().toString().padStart(2, '0');
 
+                // Determine flight status
+                const apiStatus = (flight.flight_status || '').toLowerCase();
                 let status = 'Scheduled';
                 let statusClass = 'scheduled';
-                let isActive = false;
+                let isInAir = false;
+                let isLanded = false;
+                let isDeparted = false;
 
-                const flightStatus = flight.flight_status?.toLowerCase();
-                
-                if (flightStatus === 'active' || flightStatus === 'en-route') {
-                    status = 'In Flight';
-                    statusClass = 'departed';
-                    isActive = true;
-                } else if (flightStatus === 'landed') {
-                    status = 'Arrived';
-                    statusClass = 'departed';
-                } else if (flightStatus === 'cancelled') {
+                if (apiStatus === 'active' || apiStatus === 'en-route') {
+                    isInAir = true;
+                    status = 'In Air';
+                    statusClass = 'in-air';
+                } else if (apiStatus === 'landed') {
+                    isLanded = true;
+                    status = 'Landed';
+                    statusClass = 'landed';
+                } else if (apiStatus === 'cancelled') {
                     status = 'Cancelled';
                     statusClass = 'cancelled';
-                } else if (flightStatus === 'incident') {
-                    status = 'Delayed';
-                    statusClass = 'delayed';
-                } else if (flightStatus === 'diverted') {
-                    status = 'Diverted';
+                } else if (apiStatus === 'incident' || apiStatus === 'diverted') {
+                    status = apiStatus === 'diverted' ? 'Diverted' : 'Delayed';
                     statusClass = 'delayed';
                 }
 
+                // Check for delays
                 if (flight.departure?.delay > 0 || flight.arrival?.delay > 0) {
-                    status = 'Delayed';
-                    statusClass = 'delayed';
+                    if (!isInAir && !isLanded) {
+                        status = 'Delayed';
+                        statusClass = 'delayed';
+                    }
                 }
 
-                const origin = flight.departure?.iata || 'N/A';
-                const destination = flight.arrival?.iata || 'N/A';
-                const isDeparture = flightType === 'departures' || 
-                    (flightType === 'all' && flight.departure?.iata === airportCode.toUpperCase());
+                // If the flight has departed the selected airport but hasn't landed yet
+                const depIata = flight.departure?.iata || '';
+                const arrIata = flight.arrival?.iata || '';
+
+                // For departures view: if flight left this airport and is in air
+                if (flightType === 'departures' && depIata === code) {
+                    if (apiStatus === 'landed') {
+                        // Departed from our airport and landed at destination
+                        isDeparted = true;
+                        isLanded = true;
+                        status = 'Landed';
+                        statusClass = 'landed';
+                    }
+                }
+
+                const origin = depIata || 'N/A';
+                const destination = arrIata || 'N/A';
                 const route = `${origin} → ${destination}`;
 
                 flights.push({
@@ -966,174 +945,276 @@
                     flightNumOnly: flightNumber,
                     route: route,
                     time: `${hours}:${minutes}`,
-                    gate: flight.departure?.gate || flight.arrival?.gate || 'TBA',
-                    status: status,
-                    statusClass: statusClass,
-                    aircraft: flight.aircraft?.registration || flight.aircraft?.iata || 'N/A',
-                    isDeparture: isDeparture,
+                    gate: flight.departure?.gate || flight.arrival?.gate || '—',
+                    status,
+                    statusClass,
+                    isInAir,
+                    isLanded,
+                    isDeparted,
                     sortTime: timeObj.getTime(),
-                    isActive: isActive,
-                    timeDiff: timeObj - now
+                    depIata,
+                    arrIata
                 });
             });
 
             return flights;
         }
 
-        function renderFlights(flights) {
+        // ─── FLIGHT FILTERING ───
+        function filterFlights(flights) {
+            const showInAir = document.getElementById('showInAir').checked;
+            const airportCode = document.getElementById('airportCode').value.trim().toUpperCase();
+            const flightType = document.getElementById('flightType').value;
+
+            return flights.filter(f => {
+                // Always hide flights that have fully departed and arrived
+                // For departures: if it left our airport and landed at destination → hide
+                // Unless it JUST landed (show "Landed" for one cycle)
+                if (f.isLanded && f.depIata === airportCode && flightType !== 'arrivals') {
+                    // Check if this flight was previously shown as "In Air"
+                    // If so, show it as "Landed" this cycle, then it gets removed next refresh
+                    const prevFlight = previousFlightData.find(
+                        pf => pf.flightNumber === f.flightNumber && pf.isInAir
+                    );
+                    if (prevFlight) {
+                        f.status = 'Landed';
+                        f.statusClass = 'landed';
+                        f.showAsLanded = true;
+                        return true; // Show one more cycle as "Landed"
+                    }
+                    return false; // Already cleared
+                }
+
+                // For arrivals: if flight has arrived at our airport → hide
+                if (f.isLanded && f.arrIata === airportCode && flightType === 'arrivals') {
+                    return false;
+                }
+
+                // In-air flights: only show if toggle is ON
+                if (f.isInAir && !showInAir) {
+                    return false;
+                }
+
+                // Hide departed flights (not in air, just departed status)
+                if (f.statusClass === 'departed') {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        // ─── ROUTE HEADER UPDATE ───
+        function updateRouteHeader() {
+            const flightType = document.getElementById('flightType').value;
+            const header = document.getElementById('routeHeader');
+            if (flightType === 'departures') header.textContent = 'Departing To';
+            else if (flightType === 'arrivals') header.textContent = 'Arriving From';
+            else header.textContent = 'Route';
+        }
+
+        // Update header when dropdown changes
+        document.getElementById('flightType').addEventListener('change', updateRouteHeader);
+
+        // ─── FORMAT ROUTE DISPLAY ───
+        function formatRoute(flight) {
+            const flightType = document.getElementById('flightType').value;
+            const depCity = getCityName(flight.depIata || '');
+            const arrCity = getCityName(flight.arrIata || '');
+            const depCode = flight.depIata || '';
+            const arrCode = flight.arrIata || '';
+
+            if (flightType === 'departures') {
+                // "Departing To" — show destination city with code
+                return `${arrCity} <span class="route-code">(${arrCode})</span>`;
+            } else if (flightType === 'arrivals') {
+                // "Arriving From" — show origin city with code
+                return `${depCity} <span class="route-code">(${depCode})</span>`;
+            } else {
+                // "All" — city names only, no codes
+                return `${depCity}<span class="route-arrow">→</span>${arrCity}`;
+            }
+        }
+
+        // ─── RENDER ───
+        function renderFlights(flights, isDemo = false) {
             const board = document.getElementById('flightBoard');
-            
+            updateRouteHeader();
+
             if (flights.length === 0) {
-                board.innerHTML = '<div class="no-flights">No flights found for this airport.</div>';
+                board.innerHTML = '<div class="no-flights">NO FLIGHTS TO DISPLAY</div>';
                 return;
             }
 
             board.innerHTML = flights.map((flight, index) => {
-                const airlineName = airlineNames[flight.airline] || flight.airline;
-                const logoUrl = airlineLogos[flight.airline] || `https://images.kiwi.com/airlines/64/${flight.airline}.png`;
-                const activeClass = flight.isActive ? 'active' : '';
-                
+                const name = airlineNames[flight.airline] || flight.airline;
+                const logoUrl = `https://images.kiwi.com/airlines/64/${flight.airline}.png`;
+                const rowClass = flight.isInAir ? 'in-air-row' : '';
+                const routeHTML = formatRoute(flight);
+
                 return `
-                <div class="flight-row ${activeClass}" style="animation-delay: ${index * 0.05}s">
-                    <div class="flight-cell airline-name" data-label="Airline:">${airlineName}</div>
-                    <div class="flight-cell flight-number" data-label="Flight:">
-                        <img src="${logoUrl}" alt="${flight.airline}" class="airline-logo" onerror="this.style.display='none'">
-                        <span>${flight.flightNumOnly}</span>
+                <div class="flight-row ${rowClass}" style="animation-delay: ${index * 0.03}s">
+                    <div class="flap-cell airline-cell" data-label="Airline">
+                        <img src="${logoUrl}" alt="${flight.airline}" class="airline-logo"
+                             onerror="this.style.display='none'">${name}
                     </div>
-                    <div class="flight-cell destination" data-label="Route:">${flight.route}</div>
-                    <div class="flight-cell" data-label="Time:">${flight.time}</div>
-                    <div class="flight-cell" data-label="Gate:">${flight.gate}</div>
-                    <div class="flight-cell" data-label="Status:">
-                        <span class="status ${flight.statusClass}">${flight.status}</span>
-                    </div>
-                    <div class="flight-cell" data-label="Aircraft:">${flight.aircraft}</div>
-                </div>
-            `}).join('');
+                    <div class="flap-cell flight-num-cell" data-label="Flight">${flight.flightNumOnly}</div>
+                    <div class="flap-cell route-cell" data-label="Route">${routeHTML}</div>
+                    <div class="flap-cell time-cell" data-label="Time">${flight.time}</div>
+                    <div class="flap-cell gate-cell" data-label="Gate">${flight.gate}</div>
+                    <div class="flap-cell status-cell status-${flight.statusClass}" data-label="Status">${flight.status}</div>
+                </div>`;
+            }).join('');
+
+            if (isDemo) {
+                board.insertAdjacentHTML('beforeend',
+                    `<div style="text-align:center; padding:12px; color:#555; font-size:0.7rem; letter-spacing:2px;">
+                        SAMPLE DATA — ENTER AN AIRPORT CODE FOR LIVE FLIGHTS
+                    </div>`
+                );
+            }
         }
 
+        // ─── LOAD FLIGHTS ───
         async function loadFlights() {
             const airportCode = document.getElementById('airportCode').value.trim();
             const flightType = document.getElementById('flightType').value;
             const board = document.getElementById('flightBoard');
 
             if (!airportCode) {
-                board.innerHTML = '<div class="error">Please enter an airport code</div>';
+                board.innerHTML = '<div class="error">Enter an airport IATA code</div>';
                 return;
             }
-
             if (airportCode.length < 3) {
                 board.innerHTML = '<div class="error">Airport code must be at least 3 characters</div>';
                 return;
             }
+            if (AVIATIONSTACK_API_KEY === 'YOUR_API_KEY_HERE') {
+                board.innerHTML = `<div class="error">
+                    <strong>API Key Required</strong><br><br>
+                    Sign up free at <a href="https://aviationstack.com/product" target="_blank">aviationstack.com</a><br>
+                    Then replace YOUR_API_KEY_HERE in the code.
+                </div>`;
+                return;
+            }
 
-            board.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <div>Loading live flight data for ${airportCode.toUpperCase()}...</div>
-                </div>
-            `;
+            isShowingDemo = false;
+            board.innerHTML = `<div class="loading"><div class="spinner"></div><div>Loading ${airportCode.toUpperCase()}...</div></div>`;
 
             try {
                 const flights = await fetchFlightData(airportCode, flightType);
-                
-                flights.sort((a, b) => {
-                    if (a.isActive && !b.isActive) return -1;
-                    if (!a.isActive && b.isActive) return 1;
+                const filtered = filterFlights(flights);
+
+                // Sort: boarding first, then by time
+                filtered.sort((a, b) => {
+                    if (a.statusClass === 'boarding' && b.statusClass !== 'boarding') return -1;
+                    if (a.statusClass !== 'boarding' && b.statusClass === 'boarding') return 1;
+                    if (a.isInAir && !b.isInAir) return -1;
+                    if (!a.isInAir && b.isInAir) return 1;
                     return a.sortTime - b.sortTime;
                 });
-                
-                renderFlights(flights);
+
+                // Store for next cycle's "landed" detection
+                previousFlightData = flights;
+                lastRefreshTime = new Date();
+                updateRefreshInfo();
+
+                renderFlights(filtered, false);
             } catch (error) {
                 console.error('Error loading flights:', error);
-                
-                board.innerHTML = `
-                    <div class="error">
-                        <strong>Failed to load flight data</strong><br><br>
-                        Error: ${error.message}<br><br>
-                        
-                        <strong>Common issues:</strong><br>
-                        • Invalid API key<br>
-                        • Invalid airport code (try LAX, JFK, ORD, ATL, DFW, SFO)<br>
-                        • Rate limit exceeded (500 requests/month)<br>
-                        • CORS proxy temporarily unavailable<br><br>
-                        
-                        Check browser console (F12) for details.
-                    </div>
-                `;
+                board.innerHTML = `<div class="error">
+                    <strong>Failed to load flight data</strong><br><br>
+                    ${error.message}<br><br>
+                    Common issues: invalid API key, invalid airport code, rate limit exceeded, or CORS proxy unavailable.
+                </div>`;
             }
         }
 
-        // AUTO-REFRESH TOGGLE FUNCTIONALITY
-        let autoRefreshEnabled = false;
-        let refreshInterval = null;
-
-        function toggleAutoRefresh() {
-            autoRefreshEnabled = !autoRefreshEnabled;
+        // ─── AUTO-REFRESH ───
+        function setupAutoRefresh() {
             const toggle = document.getElementById('autoRefreshToggle');
-            const label = document.getElementById('toggleLabel');
-            
-            if (autoRefreshEnabled) {
-                toggle.classList.add('active');
-                label.textContent = 'ON';
-                startAutoRefresh();
-            } else {
-                toggle.classList.remove('active');
-                label.textContent = 'OFF';
-                stopAutoRefresh();
-            }
+            toggle.addEventListener('change', () => {
+                if (toggle.checked) {
+                    startAutoRefresh();
+                } else {
+                    stopAutoRefresh();
+                }
+                updateRefreshInfo();
+            });
         }
 
         function startAutoRefresh() {
-            // Clear any existing interval
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-            }
-            
-            // Set interval for 15 minutes (900000 milliseconds)
-            refreshInterval = setInterval(() => {
+            stopAutoRefresh();
+            autoRefreshTimer = setInterval(() => {
                 const airportCode = document.getElementById('airportCode').value.trim();
-                if (airportCode && airportCode.length >= 3) {
-                    console.log('Auto-refreshing flights...');
+                if (airportCode && airportCode.length >= 3 && !isShowingDemo) {
                     loadFlights();
                 }
-            }, 900000); // 15 minutes
-            
-            console.log('Auto-refresh enabled (every 15 minutes)');
+            }, REFRESH_INTERVAL_MS);
         }
 
         function stopAutoRefresh() {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-                refreshInterval = null;
+            if (autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = null;
             }
-            console.log('Auto-refresh disabled');
         }
 
-        // Allow Enter key to load flights
-        document.getElementById('airportCode').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                loadFlights();
+        function updateRefreshInfo() {
+            const el = document.getElementById('refreshInfo');
+            const toggle = document.getElementById('autoRefreshToggle');
+            if (toggle.checked) {
+                el.textContent = '(30 min)';
+            } else {
+                el.textContent = '';
+            }
+        }
+
+
+        // ─── SHOW IN-AIR TOGGLE ───
+        document.getElementById('showInAir').addEventListener('change', () => {
+            // Re-filter and re-render if we have live data
+            if (!isShowingDemo && previousFlightData.length > 0) {
+                const filtered = filterFlights(previousFlightData);
+                filtered.sort((a, b) => {
+                    if (a.statusClass === 'boarding' && b.statusClass !== 'boarding') return -1;
+                    if (a.statusClass !== 'boarding' && b.statusClass === 'boarding') return 1;
+                    if (a.isInAir && !b.isInAir) return -1;
+                    if (!a.isInAir && b.isInAir) return 1;
+                    return a.sortTime - b.sortTime;
+                });
+                renderFlights(filtered, false);
             }
         });
 
-        // Digital clock update
+        // ─── CLOCK ───
         function updateClock() {
             const now = new Date();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const seconds = now.getSeconds().toString().padStart(2, '0');
-            document.getElementById('digitalClock').textContent = `${hours}:${minutes}:${seconds}`;
-            
+            document.getElementById('digitalClock').textContent =
+                now.getHours().toString().padStart(2, '0') + ':' +
+                now.getMinutes().toString().padStart(2, '0') + ':' +
+                now.getSeconds().toString().padStart(2, '0');
+
             if (!document.getElementById('timezoneInfo').textContent) {
-                const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                const tzAbbr = now.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
-                document.getElementById('timezoneInfo').textContent = `${timezone} (${tzAbbr})`;
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const abbr = now.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
+                document.getElementById('timezoneInfo').textContent = `${tz} (${abbr})`;
             }
         }
 
+        // ─── ENTER KEY ───
+        document.getElementById('airportCode').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadFlights();
+        });
+
+        // ─── INIT ───
         updateClock();
         setInterval(updateClock, 1000);
         detectLocationAndSuggestAirports();
+        setupAutoRefresh();
+
+        // Show demo data on initial load
+        renderFlights(getDemoFlights(), true);
     </script>
 </body>
 </html>
