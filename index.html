@@ -159,11 +159,25 @@
             border-radius: 2px;
             text-transform: uppercase;
             letter-spacing: 1px;
+            color-scheme: dark;
+        }
+
+        .controls input:-webkit-autofill,
+        .controls input:-webkit-autofill:hover,
+        .controls input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 30px #111 inset !important;
+            -webkit-text-fill-color: var(--text-bright) !important;
+            border: 1px solid #333;
         }
 
         .controls input:focus, .controls select:focus {
             outline: none;
             border-color: var(--accent-amber);
+        }
+
+        .controls select option {
+            background: #111;
+            color: var(--text-bright);
         }
 
         .controls input::placeholder {
@@ -1013,8 +1027,21 @@
             else header.textContent = 'Route';
         }
 
-        // Update header when dropdown changes
-        document.getElementById('flightType').addEventListener('change', updateRouteHeader);
+        // Update header and re-render when dropdown changes (no API call)
+        document.getElementById('flightType').addEventListener('change', () => {
+            updateRouteHeader();
+            if (!isShowingDemo && previousFlightData.length > 0) {
+                const filtered = filterFlights(previousFlightData);
+                filtered.sort((a, b) => {
+                    if (a.statusClass === 'boarding' && b.statusClass !== 'boarding') return -1;
+                    if (a.statusClass !== 'boarding' && b.statusClass === 'boarding') return 1;
+                    if (a.isInAir && !b.isInAir) return -1;
+                    if (!a.isInAir && b.isInAir) return 1;
+                    return a.sortTime - b.sortTime;
+                });
+                renderFlights(filtered, false);
+            }
+        });
 
         // ─── FORMAT ROUTE DISPLAY ───
         function formatRoute(flight) {
