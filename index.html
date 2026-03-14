@@ -3,6 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--
+        CSP: 'unsafe-inline' is required because this is a single-file app with no build process.
+        Even with unsafe-inline, this CSP still blocks external script injection, untrusted
+        connect-src origins, and limits img/font sources to known-good hosts.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        img-src 'self' https://images.kiwi.com data:;
+        font-src https://fonts.gstatic.com;
+        connect-src https://api.codetabs.com https://corsproxy.io https://api.allorigins.win;
+    ">
     <title>Flight Board</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -206,6 +219,16 @@
 
         .btn:active {
             transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn:disabled:hover {
+            background: var(--accent-amber);
         }
 
         /* Toggle switch */
@@ -539,7 +562,13 @@
             letter-spacing: 1px;
         }
 
-        /* ── MOBILE ── */
+        .api-warning {
+            font-size: 0.65rem;
+            color: var(--status-orange);
+            letter-spacing: 1px;
+        }
+
+        /* ── MOBILE 768px ── */
         @media (max-width: 768px) {
             header {
                 flex-direction: column;
@@ -582,33 +611,55 @@
                 justify-content: flex-start;
             }
         }
+
+        /* ── MOBILE 480px (small phones) ── */
+        @media (max-width: 480px) {
+            .header-title { font-size: 0.9rem; letter-spacing: 1px; }
+            .digital-clock { font-size: 0.9rem; }
+            .controls input, .controls select { font-size: 0.75rem; padding: 4px 8px; }
+            .btn { padding: 4px 12px; font-size: 0.75rem; }
+            .container { padding: 8px 10px; }
+        }
+
+        /* Screen-reader only utility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            border: 0;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" role="main">
         <!-- ── COMPACT HEADER ── -->
-        <header>
+        <header role="banner">
             <div class="header-left">
-                <span class="header-title">✈ Flight Board</span>
-                <span class="digital-clock" id="digitalClock">00:00:00</span>
-                <span class="timezone-info" id="timezoneInfo"></span>
+                <span class="header-title" aria-label="Flight Board">✈ Flight Board</span>
+                <span class="digital-clock" id="digitalClock" aria-label="Current time" aria-live="off">00:00:00</span>
+                <span class="timezone-info" id="timezoneInfo" aria-label="Timezone"></span>
             </div>
             <div class="header-right">
-                <span class="location-info" id="locationInfo"></span>
-                <div class="suggested-airports" id="suggestedAirports"></div>
+                <span class="location-info" id="locationInfo" aria-label="Nearest airport"></span>
+                <div class="suggested-airports" id="suggestedAirports" aria-label="Suggested airports"></div>
             </div>
         </header>
 
         <!-- ── CONTROLS ── -->
-        <div class="controls">
+        <div class="controls" role="search" aria-label="Flight search controls">
             <div class="control-group">
                 <label for="airportCode">Airport</label>
-                <input type="text" id="airportCode" placeholder="IATA" maxlength="4" style="width: 80px;">
+                <input type="text" id="airportCode" placeholder="IATA" maxlength="4" style="width: 80px;"
+                       aria-label="Airport IATA code (3-4 letters)" autocomplete="off" spellcheck="false">
             </div>
 
             <div class="control-group">
                 <label for="flightType">View</label>
-                <select id="flightType">
+                <select id="flightType" aria-label="Flight view type">
                     <option value="departures">Departures</option>
                     <option value="arrivals">Arrivals</option>
                     <option value="all">All Flights</option>
@@ -616,50 +667,76 @@
             </div>
 
             <div class="control-group">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="showInAir">
+                <label class="toggle-switch" aria-label="Show in-air flights">
+                    <input type="checkbox" id="showInAir" aria-label="Show in-air flights toggle">
                     <span class="toggle-slider"></span>
                 </label>
                 <span class="toggle-label">Show In-Air</span>
             </div>
 
-            <button class="btn" onclick="loadFlights()">Load</button>
+            <button class="btn" id="loadBtn" onclick="loadFlights()" aria-label="Load flight data">Load</button>
 
             <div class="toggle-group">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="autoRefreshToggle">
+                <label class="toggle-switch" aria-label="Auto-refresh every 30 minutes">
+                    <input type="checkbox" id="autoRefreshToggle" aria-label="Auto-refresh toggle">
                     <span class="toggle-slider"></span>
                 </label>
                 <span class="toggle-label">Auto-Refresh</span>
-                <span class="refresh-info" id="refreshInfo"></span>
+                <span class="refresh-info" id="refreshInfo" aria-live="polite"></span>
             </div>
+
+            <span id="apiCallCount" class="refresh-info" aria-label="API usage" aria-live="polite"></span>
         </div>
 
         <!-- ── BOARD ── -->
         <div class="board-container">
-            <div class="board-header">
-                <div>Airline</div>
-                <div>Flight</div>
-                <div id="routeHeader">Route</div>
-                <div>Time</div>
-                <div>Gate</div>
-                <div>Status</div>
+            <div class="board-header" role="row" aria-label="Flight board column headers">
+                <div role="columnheader">Airline</div>
+                <div role="columnheader">Flight</div>
+                <div role="columnheader" id="routeHeader">Route</div>
+                <div role="columnheader">Local Time</div>
+                <div role="columnheader">Gate</div>
+                <div role="columnheader">Status</div>
             </div>
-            <div id="flightBoard"></div>
+            <div id="flightBoard" role="feed" aria-label="Flight information board" aria-live="polite"></div>
         </div>
     </div>
 
     <script>
         // ─── CONFIG ───
+        // NOTE: API key is visible in client-side source — this is an accepted constraint for a
+        // free-tier personal project (100–500 req/month). Do not share this file publicly if the
+        // key is still active. Rotate at aviationstack.com/dashboard if compromised.
         const AVIATIONSTACK_API_KEY = '8d972ea55bf625f3baf55a32910ec047';
-        const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
-        let autoRefreshTimer = null;
-        let isShowingDemo = true;
-        let apiCallCount = 0; // Track calls this session
-        let lastRefreshTime = null;
-        let previousFlightData = []; // Store previous data for "landed" detection
 
-        // Try multiple CORS proxies in order
+        // NOTE: AviationStack free tier only supports HTTP endpoints. The browser never fetches
+        // this URL directly — the CORS proxy does — so the user's connection is over HTTPS.
+        // Upgrading to HTTPS on the API call requires a paid AviationStack plan.
+        const AVIATIONSTACK_BASE_URL = 'http://api.aviationstack.com/v1/flights';
+
+        const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
+        const RATE_LIMIT_MS        = 10 * 1000;       // minimum 10 s between manual loads
+        const CACHE_TTL_MS         = 5 * 60 * 1000;  // 5-minute in-memory cache
+        const API_WARN_THRESHOLD   = 40;               // warn user after 40 calls this session
+        const AIRPORT_CODE_RE      = /^[A-Z]{3,4}$/;  // valid IATA airport codes
+        const AIRLINE_CODE_RE      = /^[A-Z0-9]{1,3}$/; // valid IATA airline codes
+
+        let autoRefreshTimer   = null;
+        let isShowingDemo      = true;
+        let isLoading          = false; // prevents concurrent fetches (race condition guard)
+        let lastLoadTime       = 0;    // epoch ms of last Load press (rate limiting)
+        let apiCallCount       = 0;
+        let lastRefreshTime    = null;
+        let previousFlightData = [];
+
+        // In-memory cache — keyed by 'IATA:type', holds { flights, timestamp }
+        // localStorage is explicitly ruled out for this project; this resets on page reload.
+        const flightCache = {};
+
+        // Try multiple CORS proxies in order; remember the last working one for the session.
+        // WARNING: These are uncontrolled third-party services. A compromised proxy could return
+        // manipulated data. All data from these proxies is treated as untrusted and escaped
+        // before DOM insertion. Do not pass raw proxy error messages to innerHTML.
         const CORS_PROXIES = [
             'https://api.codetabs.com/v1/proxy?quest=',
             'https://corsproxy.io/?',
@@ -733,8 +810,27 @@
             return airportCityNames[iata] || iata;
         }
 
+        // ─── HTML ESCAPING (prevents XSS when inserting API/user data into innerHTML) ───
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // ─── API CALL COUNTER ───
+        function updateApiCallDisplay() {
+            const el = document.getElementById('apiCallCount');
+            if (!el) return;
+            if (apiCallCount === 0) { el.textContent = ''; return; }
+            el.textContent = `API: ${apiCallCount} call${apiCallCount !== 1 ? 's' : ''} this session`;
+            el.className = apiCallCount >= API_WARN_THRESHOLD ? 'api-warning' : 'refresh-info';
+        }
+
         // ─── DEMO DATA ───
-        // Shown on initial load before user enters an airport code
         function getDemoFlights() {
             const now = new Date();
             const makeTime = (offsetMin) => {
@@ -758,7 +854,7 @@
 
         // ─── AIRPORTS DATABASE ───
         const majorAirports = [
-            { code: 'ATL', name: 'Atlanta', lat: 33.6407, lon: -84.4277 },
+            { code: 'ATL', name: 'Atlanta Hartsfield-Jackson', lat: 33.6407, lon: -84.4277 },
             { code: 'DFW', name: 'Dallas/Fort Worth', lat: 32.8998, lon: -97.0403 },
             { code: 'DEN', name: 'Denver', lat: 39.8561, lon: -104.6737 },
             { code: 'ORD', name: "Chicago O'Hare", lat: 41.9742, lon: -87.9073 },
@@ -808,12 +904,25 @@
                         airportsWithDistance.sort((a, b) => a.distance - b.distance);
                         const nearest = airportsWithDistance.slice(0, 3);
 
+                        // Show nearest airport name rather than raw coordinates (privacy)
                         document.getElementById('locationInfo').textContent =
-                            `📍 ${userLat.toFixed(1)}°, ${userLon.toFixed(1)}°`;
+                            `Near ${nearest[0].name}`;
 
-                        document.getElementById('suggestedAirports').innerHTML = nearest.map(a =>
-                            `<div class="airport-suggestion" onclick="selectAirport('${a.code}')">${a.code} (${Math.round(a.distance)}mi)</div>`
-                        ).join('');
+                        // Airport codes in suggestions come from the hardcoded majorAirports
+                        // array, so no escaping needed — but we use textContent for the label.
+                        const suggestEl = document.getElementById('suggestedAirports');
+                        suggestEl.innerHTML = '';
+                        nearest.forEach(a => {
+                            const btn = document.createElement('div');
+                            btn.className = 'airport-suggestion';
+                            btn.setAttribute('role', 'button');
+                            btn.setAttribute('tabindex', '0');
+                            btn.setAttribute('aria-label', `Load flights for ${a.code}`);
+                            btn.textContent = `${a.code} (${Math.round(a.distance)}mi)`;
+                            btn.onclick = () => selectAirport(a.code);
+                            btn.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') selectAirport(a.code); };
+                            suggestEl.appendChild(btn);
+                        });
                     },
                     () => showDefaultSuggestions()
                 );
@@ -823,11 +932,19 @@
         }
 
         function showDefaultSuggestions() {
-            document.getElementById('suggestedAirports').innerHTML = `
-                <div class="airport-suggestion" onclick="selectAirport('CHS')">CHS</div>
-                <div class="airport-suggestion" onclick="selectAirport('ATL')">ATL</div>
-                <div class="airport-suggestion" onclick="selectAirport('CLT')">CLT</div>
-            `;
+            const suggestEl = document.getElementById('suggestedAirports');
+            suggestEl.innerHTML = '';
+            ['CHS', 'ATL', 'CLT'].forEach(code => {
+                const btn = document.createElement('div');
+                btn.className = 'airport-suggestion';
+                btn.setAttribute('role', 'button');
+                btn.setAttribute('tabindex', '0');
+                btn.setAttribute('aria-label', `Load flights for ${code}`);
+                btn.textContent = code;
+                btn.onclick = () => selectAirport(code);
+                btn.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') selectAirport(code); };
+                suggestEl.appendChild(btn);
+            });
         }
 
         function selectAirport(code) {
@@ -838,15 +955,35 @@
         // ─── API FETCH ───
         async function fetchFlightData(airportCode, flightType) {
             if (flightType === 'all') {
-                const departures = await fetchFlightsByType(airportCode, 'departures');
-                const arrivals = await fetchFlightsByType(airportCode, 'arrivals');
-                return [...departures, ...arrivals];
+                // Use Promise.allSettled so a partial failure still shows whatever data loaded
+                const results = await Promise.allSettled([
+                    fetchFlightsByType(airportCode, 'departures'),
+                    fetchFlightsByType(airportCode, 'arrivals')
+                ]);
+                const flights = [];
+                let anySuccess = false;
+                results.forEach(r => {
+                    if (r.status === 'fulfilled') {
+                        flights.push(...r.value);
+                        anySuccess = true;
+                    } else {
+                        console.warn('Partial fetch failure:', r.reason);
+                    }
+                });
+                if (!anySuccess) throw new Error('Both departures and arrivals requests failed.');
+                return flights;
             }
             return await fetchFlightsByType(airportCode, flightType);
         }
 
         async function fetchFlightsByType(airportCode, type) {
-            const baseUrl = 'http://api.aviationstack.com/v1/flights';
+            const cacheKey = `${airportCode}:${type}`;
+            const cached = flightCache[cacheKey];
+            if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+                console.log(`Cache hit for ${cacheKey}`);
+                return cached.flights;
+            }
+
             const params = new URLSearchParams({
                 access_key: AVIATIONSTACK_API_KEY,
                 limit: type === 'all' ? 50 : 100
@@ -858,8 +995,9 @@
                 params.append('arr_iata', airportCode.toUpperCase());
             }
 
-            const apiUrl = `${baseUrl}?${params.toString()}`;
+            const apiUrl = `${AVIATIONSTACK_BASE_URL}?${params.toString()}`;
             apiCallCount++;
+            updateApiCallDisplay();
 
             for (let i = 0; i < CORS_PROXIES.length; i++) {
                 const proxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
@@ -868,13 +1006,39 @@
 
                 try {
                     const response = await fetch(url);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-                    const data = JSON.parse(await response.text());
-                    if (data.error) throw new Error(data.error.info || data.error.message || JSON.stringify(data.error));
+                    // Handle HTTP 429 rate-limit explicitly
+                    if (response.status === 429) {
+                        const retryAfter = response.headers.get('Retry-After');
+                        const msg = retryAfter
+                            ? `Rate limited by proxy. Retry after ${retryAfter}s.`
+                            : 'Rate limited by proxy. Please wait before trying again.';
+                        throw new Error(msg);
+                    }
+
+                    if (!response.ok) throw new Error(`HTTP ${response.status} from proxy`);
+
+                    // Safe JSON parse — never pass parse errors to innerHTML
+                    let data;
+                    try {
+                        data = JSON.parse(await response.text());
+                    } catch {
+                        throw new Error('Invalid response from proxy (not valid JSON).');
+                    }
+
+                    if (data.error) {
+                        // Summarise the API error without exposing raw API error messages to UI
+                        const code = data.error.code || 'unknown';
+                        throw new Error(`API error (code: ${code}). Check your API key and airport code.`);
+                    }
 
                     currentProxyIndex = proxyIndex;
-                    return processAviationStackData(data, airportCode, type);
+                    const flights = processAviationStackData(data, airportCode, type);
+
+                    // Store in cache
+                    flightCache[cacheKey] = { flights, timestamp: Date.now() };
+                    return flights;
+
                 } catch (e) {
                     console.error(`Proxy ${proxyIndex + 1} failed:`, e.message);
                     if (i === CORS_PROXIES.length - 1) throw e;
@@ -909,6 +1073,7 @@
                 let isInAir = false;
                 let isLanded = false;
                 let isDeparted = false;
+                let landedAt = null; // timestamp for landed state expiry
 
                 if (apiStatus === 'active' || apiStatus === 'en-route') {
                     isInAir = true;
@@ -916,6 +1081,7 @@
                     statusClass = 'in-air';
                 } else if (apiStatus === 'landed') {
                     isLanded = true;
+                    landedAt = Date.now();
                     status = 'Landed';
                     statusClass = 'landed';
                 } else if (apiStatus === 'cancelled') {
@@ -934,30 +1100,29 @@
                     }
                 }
 
-                // If the flight has departed the selected airport but hasn't landed yet
+                // For departures view: if flight left this airport and landed at destination
                 const depIata = flight.departure?.iata || '';
                 const arrIata = flight.arrival?.iata || '';
 
-                // For departures view: if flight left this airport and is in air
                 if (flightType === 'departures' && depIata === code) {
                     if (apiStatus === 'landed') {
-                        // Departed from our airport and landed at destination
                         isDeparted = true;
                         isLanded = true;
+                        landedAt = landedAt || Date.now();
                         status = 'Landed';
                         statusClass = 'landed';
                     }
                 }
 
-                const origin = depIata || 'N/A';
+                const origin      = depIata || 'N/A';
                 const destination = arrIata || 'N/A';
-                const route = `${origin} → ${destination}`;
+                const route       = `${origin} → ${destination}`;
 
                 flights.push({
                     airline: airlineIata,
                     flightNumber: flight.flight?.iata || `${airlineIata}${flightNumber}`,
                     flightNumOnly: flightNumber,
-                    route: route,
+                    route,
                     time: `${hours}:${minutes}`,
                     gate: flight.departure?.gate || flight.arrival?.gate || '—',
                     status,
@@ -965,6 +1130,7 @@
                     isInAir,
                     isLanded,
                     isDeparted,
+                    landedAt,
                     sortTime: timeObj.getTime(),
                     depIata,
                     arrIata
@@ -976,17 +1142,19 @@
 
         // ─── FLIGHT FILTERING ───
         function filterFlights(flights) {
-            const showInAir = document.getElementById('showInAir').checked;
+            const showInAir   = document.getElementById('showInAir').checked;
             const airportCode = document.getElementById('airportCode').value.trim().toUpperCase();
-            const flightType = document.getElementById('flightType').value;
+            const flightType  = document.getElementById('flightType').value;
+            const now         = Date.now();
+            const LANDED_SHOW_MS = REFRESH_INTERVAL_MS; // show "Landed" for one full refresh cycle
 
             return flights.filter(f => {
-                // Always hide flights that have fully departed and arrived
-                // For departures: if it left our airport and landed at destination → hide
-                // Unless it JUST landed (show "Landed" for one cycle)
+                // Departures: if it left our airport and landed → show briefly, then hide
                 if (f.isLanded && f.depIata === airportCode && flightType !== 'arrivals') {
-                    // Check if this flight was previously shown as "In Air"
-                    // If so, show it as "Landed" this cycle, then it gets removed next refresh
+                    // If we recorded when it landed, only show for one refresh cycle
+                    if (f.landedAt && (now - f.landedAt) > LANDED_SHOW_MS) return false;
+
+                    // Fallback to previous-data check for flights landed before this session
                     const prevFlight = previousFlightData.find(
                         pf => pf.flightNumber === f.flightNumber && pf.isInAir
                     );
@@ -994,25 +1162,22 @@
                         f.status = 'Landed';
                         f.statusClass = 'landed';
                         f.showAsLanded = true;
-                        return true; // Show one more cycle as "Landed"
+                        return true;
                     }
-                    return false; // Already cleared
+                    // Not previously in-air — already filtered out
+                    return false;
                 }
 
-                // For arrivals: if flight has arrived at our airport → hide
+                // Arrivals: if flight has arrived at our airport → hide
                 if (f.isLanded && f.arrIata === airportCode && flightType === 'arrivals') {
                     return false;
                 }
 
                 // In-air flights: only show if toggle is ON
-                if (f.isInAir && !showInAir) {
-                    return false;
-                }
+                if (f.isInAir && !showInAir) return false;
 
-                // Hide departed flights (not in air, just departed status)
-                if (f.statusClass === 'departed') {
-                    return false;
-                }
+                // Hide departed flights (not in air)
+                if (f.statusClass === 'departed') return false;
 
                 return true;
             });
@@ -1032,70 +1197,82 @@
             updateRouteHeader();
             if (!isShowingDemo && previousFlightData.length > 0) {
                 const filtered = filterFlights(previousFlightData);
-                filtered.sort((a, b) => {
-                    if (a.statusClass === 'boarding' && b.statusClass !== 'boarding') return -1;
-                    if (a.statusClass !== 'boarding' && b.statusClass === 'boarding') return 1;
-                    if (a.isInAir && !b.isInAir) return -1;
-                    if (!a.isInAir && b.isInAir) return 1;
-                    return a.sortTime - b.sortTime;
-                });
+                filtered.sort(flightSortComparator);
                 renderFlights(filtered, false);
             }
         });
 
+        // ─── SORT COMPARATOR ───
+        function flightSortComparator(a, b) {
+            if (a.statusClass === 'boarding' && b.statusClass !== 'boarding') return -1;
+            if (a.statusClass !== 'boarding' && b.statusClass === 'boarding') return 1;
+            if (a.isInAir && !b.isInAir) return -1;
+            if (!a.isInAir && b.isInAir) return 1;
+            return a.sortTime - b.sortTime;
+        }
+
         // ─── FORMAT ROUTE DISPLAY ───
+        // All values inserted via escapeHtml to prevent XSS from API data.
         function formatRoute(flight) {
             const flightType = document.getElementById('flightType').value;
-            const depCity = getCityName(flight.depIata || '');
-            const arrCity = getCityName(flight.arrIata || '');
-            const depCode = flight.depIata || '';
-            const arrCode = flight.arrIata || '';
+            const depCity = escapeHtml(getCityName(flight.depIata || ''));
+            const arrCity = escapeHtml(getCityName(flight.arrIata || ''));
+            const depCode = escapeHtml(flight.depIata || '');
+            const arrCode = escapeHtml(flight.arrIata || '');
 
             if (flightType === 'departures') {
-                // "Departing To" — show destination city with code
                 return `${arrCity} <span class="route-code">(${arrCode})</span>`;
             } else if (flightType === 'arrivals') {
-                // "Arriving From" — show origin city with code
                 return `${depCity} <span class="route-code">(${depCode})</span>`;
             } else {
-                // "All" — city names only, no codes
                 return `${depCity}<span class="route-arrow">→</span>${arrCity}`;
             }
         }
 
         // ─── RENDER ───
+        // All API-sourced values are escaped with escapeHtml() before insertion.
         function renderFlights(flights, isDemo = false) {
             const board = document.getElementById('flightBoard');
             updateRouteHeader();
 
             if (flights.length === 0) {
-                board.innerHTML = '<div class="no-flights">NO FLIGHTS TO DISPLAY</div>';
+                board.innerHTML = '<div class="no-flights" role="status">NO FLIGHTS TO DISPLAY</div>';
                 return;
             }
 
             board.innerHTML = flights.map((flight, index) => {
-                const name = airlineNames[flight.airline] || flight.airline;
-                const logoUrl = `https://images.kiwi.com/airlines/64/${flight.airline}.png`;
-                const rowClass = flight.isInAir ? 'in-air-row' : '';
-                const routeHTML = formatRoute(flight);
+                // Validate airline code before using in URL/alt — fall back to empty
+                const safeAirlineCode = AIRLINE_CODE_RE.test(flight.airline) ? flight.airline : '';
+                const name       = escapeHtml(airlineNames[flight.airline] || flight.airline);
+                const logoUrl    = safeAirlineCode
+                    ? `https://images.kiwi.com/airlines/64/${escapeHtml(safeAirlineCode)}.png`
+                    : '';
+                const rowClass   = flight.isInAir ? 'in-air-row' : '';
+                const routeHTML  = formatRoute(flight); // already escaped inside formatRoute
+                const flightNum  = escapeHtml(flight.flightNumOnly);
+                const time       = escapeHtml(flight.time);
+                const gate       = escapeHtml(String(flight.gate));
+                const status     = escapeHtml(flight.status);
+                const statusCls  = escapeHtml(flight.statusClass);
+
+                const logoTag = logoUrl
+                    ? `<img src="${logoUrl}" alt="${escapeHtml(safeAirlineCode)}" class="airline-logo" onerror="this.style.display='none'">`
+                    : '';
 
                 return `
-                <div class="flight-row ${rowClass}" style="animation-delay: ${index * 0.03}s">
-                    <div class="flap-cell airline-cell" data-label="Airline">
-                        <img src="${logoUrl}" alt="${flight.airline}" class="airline-logo"
-                             onerror="this.style.display='none'">${name}
-                    </div>
-                    <div class="flap-cell flight-num-cell" data-label="Flight">${flight.flightNumOnly}</div>
+                <div class="flight-row ${rowClass}" style="animation-delay: ${index * 0.03}s" role="article" aria-label="Flight ${escapeHtml(flight.flightNumber)}">
+                    <div class="flap-cell airline-cell" data-label="Airline">${logoTag}${name}</div>
+                    <div class="flap-cell flight-num-cell" data-label="Flight">${flightNum}</div>
                     <div class="flap-cell route-cell" data-label="Route">${routeHTML}</div>
-                    <div class="flap-cell time-cell" data-label="Time">${flight.time}</div>
-                    <div class="flap-cell gate-cell" data-label="Gate">${flight.gate}</div>
-                    <div class="flap-cell status-cell status-${flight.statusClass}" data-label="Status">${flight.status}</div>
+                    <div class="flap-cell time-cell" data-label="Local Time">${time}</div>
+                    <div class="flap-cell gate-cell" data-label="Gate">${gate}</div>
+                    <div class="flap-cell status-cell status-${statusCls}" data-label="Status">${status}</div>
                 </div>`;
             }).join('');
 
             if (isDemo) {
                 board.insertAdjacentHTML('beforeend',
-                    `<div style="text-align:center; padding:12px; color:#555; font-size:0.7rem; letter-spacing:2px;">
+                    `<div style="text-align:center; padding:12px; color:#555; font-size:0.7rem; letter-spacing:2px;" role="note">
                         SAMPLE DATA — ENTER AN AIRPORT CODE FOR LIVE FLIGHTS
                     </div>`
                 );
@@ -1104,56 +1281,95 @@
 
         // ─── LOAD FLIGHTS ───
         async function loadFlights() {
-            const airportCode = document.getElementById('airportCode').value.trim();
-            const flightType = document.getElementById('flightType').value;
-            const board = document.getElementById('flightBoard');
+            const rawInput    = document.getElementById('airportCode').value.trim();
+            const airportCode = rawInput.toUpperCase();
+            const flightType  = document.getElementById('flightType').value;
+            const board       = document.getElementById('flightBoard');
+            const loadBtn     = document.getElementById('loadBtn');
 
+            // Validate airport code format before any DOM or API use
             if (!airportCode) {
-                board.innerHTML = '<div class="error">Enter an airport IATA code</div>';
+                board.innerHTML = '<div class="error" role="alert">Enter an airport IATA code</div>';
                 return;
             }
-            if (airportCode.length < 3) {
-                board.innerHTML = '<div class="error">Airport code must be at least 3 characters</div>';
+            if (!AIRPORT_CODE_RE.test(airportCode)) {
+                board.innerHTML = '<div class="error" role="alert">Airport code must be 3–4 uppercase letters (e.g. CHS, KJFK)</div>';
                 return;
             }
             if (AVIATIONSTACK_API_KEY === 'YOUR_API_KEY_HERE') {
-                board.innerHTML = `<div class="error">
+                board.innerHTML = `<div class="error" role="alert">
                     <strong>API Key Required</strong><br><br>
-                    Sign up free at <a href="https://aviationstack.com/product" target="_blank">aviationstack.com</a><br>
+                    Sign up free at <a href="https://aviationstack.com/product" target="_blank" rel="noopener">aviationstack.com</a><br>
                     Then replace YOUR_API_KEY_HERE in the code.
                 </div>`;
                 return;
             }
 
+            // Rate limiting: prevent spamming the Load button
+            const now = Date.now();
+            if (now - lastLoadTime < RATE_LIMIT_MS) {
+                const remaining = Math.ceil((RATE_LIMIT_MS - (now - lastLoadTime)) / 1000);
+                board.innerHTML = `<div class="error" role="alert">Please wait ${remaining}s before loading again.</div>`;
+                return;
+            }
+
+            // Concurrent-request guard
+            if (isLoading) return;
+            isLoading = true;
+            lastLoadTime = now;
+
+            // Disable button during load to provide feedback
+            loadBtn.disabled = true;
+
+            // Safe loading message — use textContent for the airport code, not innerHTML interpolation
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.setAttribute('role', 'status');
+            loadingDiv.innerHTML = '<div class="spinner"></div>';
+            const loadingText = document.createElement('div');
+            loadingText.textContent = `Loading ${airportCode}…`;
+            loadingDiv.appendChild(loadingText);
+            board.innerHTML = '';
+            board.appendChild(loadingDiv);
+
             isShowingDemo = false;
-            board.innerHTML = `<div class="loading"><div class="spinner"></div><div>Loading ${airportCode.toUpperCase()}...</div></div>`;
 
             try {
-                const flights = await fetchFlightData(airportCode, flightType);
+                const flights  = await fetchFlightData(airportCode, flightType);
                 const filtered = filterFlights(flights);
+                filtered.sort(flightSortComparator);
 
-                // Sort: boarding first, then by time
-                filtered.sort((a, b) => {
-                    if (a.statusClass === 'boarding' && b.statusClass !== 'boarding') return -1;
-                    if (a.statusClass !== 'boarding' && b.statusClass === 'boarding') return 1;
-                    if (a.isInAir && !b.isInAir) return -1;
-                    if (!a.isInAir && b.isInAir) return 1;
-                    return a.sortTime - b.sortTime;
-                });
-
-                // Store for next cycle's "landed" detection
                 previousFlightData = flights;
-                lastRefreshTime = new Date();
+                lastRefreshTime    = new Date();
                 updateRefreshInfo();
-
                 renderFlights(filtered, false);
             } catch (error) {
                 console.error('Error loading flights:', error);
-                board.innerHTML = `<div class="error">
-                    <strong>Failed to load flight data</strong><br><br>
-                    ${error.message}<br><br>
-                    Common issues: invalid API key, invalid airport code, rate limit exceeded, or CORS proxy unavailable.
-                </div>`;
+
+                // Never insert error.message directly into innerHTML — it may contain HTML
+                // from a compromised proxy or malformed API response.
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.setAttribute('role', 'alert');
+
+                const heading = document.createElement('strong');
+                heading.textContent = 'Failed to load flight data';
+                const br1 = document.createElement('br');
+                const br2 = document.createElement('br');
+                const msg = document.createElement('span');
+                msg.textContent = error.message; // textContent is safe — never innerHTML here
+                const br3 = document.createElement('br');
+                const br4 = document.createElement('br');
+                const hint = document.createElement('span');
+                hint.textContent = 'Common issues: invalid API key, invalid airport code, rate limit exceeded, or CORS proxy unavailable.';
+
+                errorDiv.append(heading, br1, br2, msg, br3, br4, hint);
+                board.innerHTML = '';
+                board.appendChild(errorDiv);
+            } finally {
+                isLoading = false;
+                // Re-enable button after rate limit window
+                setTimeout(() => { loadBtn.disabled = false; }, RATE_LIMIT_MS);
             }
         }
 
@@ -1173,8 +1389,8 @@
         function startAutoRefresh() {
             stopAutoRefresh();
             autoRefreshTimer = setInterval(() => {
-                const airportCode = document.getElementById('airportCode').value.trim();
-                if (airportCode && airportCode.length >= 3 && !isShowingDemo) {
+                const airportCode = document.getElementById('airportCode').value.trim().toUpperCase();
+                if (AIRPORT_CODE_RE.test(airportCode) && !isShowingDemo) {
                     loadFlights();
                 }
             }, REFRESH_INTERVAL_MS);
@@ -1188,28 +1404,16 @@
         }
 
         function updateRefreshInfo() {
-            const el = document.getElementById('refreshInfo');
+            const el     = document.getElementById('refreshInfo');
             const toggle = document.getElementById('autoRefreshToggle');
-            if (toggle.checked) {
-                el.textContent = '(30 min)';
-            } else {
-                el.textContent = '';
-            }
+            el.textContent = toggle.checked ? '(30 min)' : '';
         }
-
 
         // ─── SHOW IN-AIR TOGGLE ───
         document.getElementById('showInAir').addEventListener('change', () => {
-            // Re-filter and re-render if we have live data
             if (!isShowingDemo && previousFlightData.length > 0) {
                 const filtered = filterFlights(previousFlightData);
-                filtered.sort((a, b) => {
-                    if (a.statusClass === 'boarding' && b.statusClass !== 'boarding') return -1;
-                    if (a.statusClass !== 'boarding' && b.statusClass === 'boarding') return 1;
-                    if (a.isInAir && !b.isInAir) return -1;
-                    if (!a.isInAir && b.isInAir) return 1;
-                    return a.sortTime - b.sortTime;
-                });
+                filtered.sort(flightSortComparator);
                 renderFlights(filtered, false);
             }
         });
@@ -1223,9 +1427,15 @@
                 now.getSeconds().toString().padStart(2, '0');
 
             if (!document.getElementById('timezoneInfo').textContent) {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                const abbr = now.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
-                document.getElementById('timezoneInfo').textContent = `${tz} (${abbr})`;
+                try {
+                    const tz   = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    const abbr = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' })
+                        .formatToParts(now)
+                        .find(p => p.type === 'timeZoneName')?.value || tz;
+                    document.getElementById('timezoneInfo').textContent = `${tz} (${abbr})`;
+                } catch {
+                    // Silently ignore — timezone display is non-critical
+                }
             }
         }
 
@@ -1234,13 +1444,14 @@
             if (e.key === 'Enter') loadFlights();
         });
 
+        // ─── CLEANUP ON UNLOAD ───
+        window.addEventListener('beforeunload', stopAutoRefresh);
+
         // ─── INIT ───
         updateClock();
         setInterval(updateClock, 1000);
         detectLocationAndSuggestAirports();
         setupAutoRefresh();
-
-        // Show demo data on initial load
         renderFlights(getDemoFlights(), true);
     </script>
 </body>
