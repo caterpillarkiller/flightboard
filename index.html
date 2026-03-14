@@ -704,15 +704,10 @@
 
     <script>
         // ─── CONFIG ───
-        // NOTE: API key is visible in client-side source — this is an accepted constraint for a
-        // free-tier personal project (100–500 req/month). Do not share this file publicly if the
-        // key is still active. Rotate at aviationstack.com/dashboard if compromised.
-        const AVIATIONSTACK_API_KEY = '8d972ea55bf625f3baf55a32910ec047';
-
-        // NOTE: AviationStack free tier only supports HTTP endpoints. The browser never fetches
-        // this URL directly — the CORS proxy does — so the user's connection is over HTTPS.
-        // Upgrading to HTTPS on the API call requires a paid AviationStack plan.
-        const AVIATIONSTACK_BASE_URL = 'http://api.aviationstack.com/v1/flights';
+        // API key is stored as a secret in the Cloudflare Worker — it never appears here.
+        // All flight requests go to the Worker, which adds the key server-side before
+        // forwarding to AviationStack. Rotate the key in the Cloudflare dashboard if needed.
+        const WORKER_URL = 'https://aviationstack-proxy.mute-bar-c9e9.workers.dev';
 
         const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
         const RATE_LIMIT_MS        = 10 * 1000;       // minimum 10 s between manual loads
@@ -732,17 +727,6 @@
         // In-memory cache — keyed by 'IATA:type', holds { flights, timestamp }
         // localStorage is explicitly ruled out for this project; this resets on page reload.
         const flightCache = {};
-
-        // Try multiple CORS proxies in order; remember the last working one for the session.
-        // WARNING: These are uncontrolled third-party services. A compromised proxy could return
-        // manipulated data. All data from these proxies is treated as untrusted and escaped
-        // before DOM insertion. Do not pass raw proxy error messages to innerHTML.
-        const CORS_PROXIES = [
-            'https://api.codetabs.com/v1/proxy?quest=',
-            'https://corsproxy.io/?',
-            'https://api.allorigins.win/raw?url='
-        ];
-        let currentProxyIndex = 0;
 
         // ─── AIRLINE DATABASE ───
         const airlineNames = {
@@ -984,67 +968,51 @@
                 return cached.flights;
             }
 
-            const params = new URLSearchParams({
-                access_key: AVIATIONSTACK_API_KEY,
-                limit: type === 'all' ? 50 : 100
-            });
-
+            const params = new URLSearchParams({ limit: 100 });
             if (type === 'departures') {
-                params.append('dep_iata', airportCode.toUpperCase());
+                params.set('dep_iata', airportCode.toUpperCase());
             } else {
-                params.append('arr_iata', airportCode.toUpperCase());
+                params.set('arr_iata', airportCode.toUpperCase());
             }
 
-            const apiUrl = `${AVIATIONSTACK_BASE_URL}?${params.toString()}`;
             apiCallCount++;
             updateApiCallDisplay();
 
-            for (let i = 0; i < CORS_PROXIES.length; i++) {
-                const proxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
-                const proxy = CORS_PROXIES[proxyIndex];
-                const url = `${proxy}${encodeURIComponent(apiUrl)}`;
+            try {
+                const response = await fetch(`${WORKER_URL}?${params}`);
 
-                try {
-                    const response = await fetch(url);
-
-                    // Handle HTTP 429 rate-limit explicitly
-                    if (response.status === 429) {
-                        const retryAfter = response.headers.get('Retry-After');
-                        const msg = retryAfter
-                            ? `Rate limited by proxy. Retry after ${retryAfter}s.`
-                            : 'Rate limited by proxy. Please wait before trying again.';
-                        throw new Error(msg);
-                    }
-
-                    if (!response.ok) throw new Error(`HTTP ${response.status} from proxy`);
-
-                    // Safe JSON parse — never pass parse errors to innerHTML
-                    let data;
-                    try {
-                        data = JSON.parse(await response.text());
-                    } catch {
-                        throw new Error('Invalid response from proxy (not valid JSON).');
-                    }
-
-                    if (data.error) {
-                        // Summarise the API error without exposing raw API error messages to UI
-                        const code = data.error.code || 'unknown';
-                        throw new Error(`API error (code: ${code}). Check your API key and airport code.`);
-                    }
-
-                    currentProxyIndex = proxyIndex;
-                    const flights = processAviationStackData(data, airportCode, type);
-
-                    // Store in cache
-                    flightCache[cacheKey] = { flights, timestamp: Date.now() };
-                    return flights;
-
-                } catch (e) {
-                    console.error(`Proxy ${proxyIndex + 1} failed:`, e.message);
-                    if (i === CORS_PROXIES.length - 1) throw e;
+                // Handle HTTP 429 rate-limit explicitly
+                if (response.status === 429) {
+                    const retryAfter = response.headers.get('Retry-After');
+                    const msg = retryAfter
+                        ? `Rate limited. Retry after ${retryAfter}s.`
+                        : 'Rate limited. Please wait before trying again.';
+                    throw new Error(msg);
                 }
+
+                if (!response.ok) throw new Error(`Request failed (HTTP ${response.status}).`);
+
+                // Safe JSON parse — never pass parse errors to innerHTML
+                let data;
+                try {
+                    data = JSON.parse(await response.text());
+                } catch {
+                    throw new Error('Invalid response from server (not valid JSON).');
+                }
+
+                if (data.error) {
+                    const code = data.error.code || 'unknown';
+                    throw new Error(`API error (code: ${code}). Check your API key and airport code.`);
+                }
+
+                const flights = processAviationStackData(data, airportCode, type);
+                flightCache[cacheKey] = { flights, timestamp: Date.now() };
+                return flights;
+
+            } catch (e) {
+                console.error('Worker fetch failed:', e.message);
+                throw e;
             }
-            return [];
         }
 
         function processAviationStackData(data, airportCode, flightType) {
@@ -1296,11 +1264,10 @@
                 board.innerHTML = '<div class="error" role="alert">Airport code must be 3–4 uppercase letters (e.g. CHS, KJFK)</div>';
                 return;
             }
-            if (AVIATIONSTACK_API_KEY === 'YOUR_API_KEY_HERE') {
+            if (!WORKER_URL) {
                 board.innerHTML = `<div class="error" role="alert">
-                    <strong>API Key Required</strong><br><br>
-                    Sign up free at <a href="https://aviationstack.com/product" target="_blank" rel="noopener">aviationstack.com</a><br>
-                    Then replace YOUR_API_KEY_HERE in the code.
+                    <strong>Worker URL not configured</strong><br><br>
+                    Set WORKER_URL to your Cloudflare Worker address.
                 </div>`;
                 return;
             }
